@@ -26,7 +26,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Default `settings` rows seeded by migration: `follow_up_cadence`, `proactive_surfacing`, `decay_thresholds`, `max_tool_calls_per_turn` (#3)
 - `get_db()` in `src/weles/db/connection.py`; WAL mode enabled, connection cached per-thread (#3)
 
-<!-- Issues #4–5 land here as they are merged -->
+- `startup()` coroutine in `src/weles/api/startup.py`; validates env, runs migrations, seeds settings, sets `web_search_available` and `is_first_run` on app state (#4)
+- `GET /health` endpoint; returns `{"status": "ok", "web_search": bool, "first_run": bool}` (#4)
+
+<!-- Issue #5 lands here when merged -->
 
 ### v0.2 — Personalization
 <!-- Issues #6–12 -->
