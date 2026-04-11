@@ -9,8 +9,11 @@ from dotenv import load_dotenv
 
 from weles.db.connection import get_db
 from weles.utils.errors import ConfigurationError
+from weles.utils.paths import resource_path
 
 logger = logging.getLogger(__name__)
+
+_WELES_DIR = Path.home() / ".weles"
 
 _DEFAULT_SETTINGS = [
     ("follow_up_cadence", '"off"'),
@@ -43,12 +46,8 @@ def check_port_free() -> None:
 
 async def startup(state: Any) -> None:
     """Initialise app state: validate env, run migrations, seed settings."""
-    # Derive weles dir from WELES_DB_PATH (defaults to ~/.weles)
-    raw_db = os.getenv("WELES_DB_PATH", str(Path.home() / ".weles" / "weles.db"))
-    weles_dir = Path(raw_db).expanduser().parent
-
     # 1. Load ~/.weles/.env if it exists — supplements env, does not override shell
-    env_file = weles_dir / ".env"
+    env_file = _WELES_DIR / ".env"
     if env_file.exists():
         load_dotenv(env_file, override=False)
 
@@ -58,14 +57,17 @@ async def startup(state: Any) -> None:
             "ANTHROPIC_API_KEY is not set. Set it in your environment or ~/.weles/.env."
         )
 
-    # 3. Create weles dir if absent
-    weles_dir.mkdir(parents=True, exist_ok=True)
+    # 3. Create ~/.weles/ if absent
+    _WELES_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Port conflict check — exit before serving if port is already bound
+    check_port_free()
 
     # 4. Run alembic upgrade head
     from alembic import command
     from alembic.config import Config
 
-    cfg = Config("alembic.ini")
+    cfg = Config(str(resource_path("alembic.ini")))
     command.upgrade(cfg, "head")
 
     # 5. Seed default settings if table is empty
