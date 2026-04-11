@@ -29,7 +29,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `startup()` coroutine in `src/weles/api/startup.py`; validates env, runs migrations, seeds settings, sets `web_search_available` and `is_first_run` on app state (#4)
 - `GET /health` endpoint; returns `{"status": "ok", "web_search": bool, "first_run": bool}` (#4)
 
-<!-- Issue #5 lands here when merged -->
+- FastAPI app with full REST API: sessions, messages, profile, history, settings, preferences, data endpoints (#5)
+- SSE streaming on `POST /sessions/{id}/messages`; typed events: `text_delta`, `tool_start`, `tool_end`, `tool_error`, `done`, `error` (#5)
+- React + Vite chat UI: sidebar session list, mode selector pill tabs, streaming markdown rendering, tool-use progress strip, settings page (#5)
+- `uv run weles` now starts the FastAPI server; CLI REPL removed (#5)
+- `DELETE /data` wipes and recreates all tables via alembic downgrade + upgrade (#5)
 
 ### v0.2 — Personalization
 <!-- Issues #6–12 -->
