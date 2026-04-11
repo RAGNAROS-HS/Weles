@@ -20,7 +20,4 @@ class ToolRegistry:
         return str(result)
 
     def get_tool_schemas(self) -> list[dict[str, Any]]:
-        return [
-            {"name": name, "input_schema": schema}
-            for name, schema in self._schemas.items()
-        ]
+        return [{"name": name, "input_schema": schema} for name, schema in self._schemas.items()]

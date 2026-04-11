@@ -59,9 +59,7 @@ async def stream_response(
 
     with client.messages.stream(**kwargs) as stream:
         for event in stream:
-            if isinstance(event, RawContentBlockDeltaEvent) and isinstance(
-                event.delta, TextDelta
-            ):
+            if isinstance(event, RawContentBlockDeltaEvent) and isinstance(event.delta, TextDelta):
                 yield TextDeltaEvent(text=event.delta.text)
             elif isinstance(event, RawMessageStopEvent):
                 yield DoneEvent()
