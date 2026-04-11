@@ -15,7 +15,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Shared test fixtures: `mock_claude`, `tmp_db`, `client` in `tests/conftest.py` (#1)
 - React + Vite + TypeScript frontend scaffold under `frontend/` (#1)
 
-<!-- Issues #2–5 land here as they are merged -->
+- Core Claude streaming integration: `client`, `stream`, `dispatch`, `session`, `prompts` modules (#2)
+- `AgentEvent` tagged union: `TextDeltaEvent`, `ToolStartEvent`, `ToolEndEvent`, `ToolErrorEvent`, `DoneEvent` (#2)
+- `ToolRegistry` with `register`, `dispatch`, `get_tool_schemas`; raises `ToolNotFoundError` on unknown tool (#2)
+- `ConfigurationError` raised by `get_client()` when `ANTHROPIC_API_KEY` is absent (#2)
+- Interactive CLI REPL (`uv run weles`) with streaming output and clean `exit`/Ctrl+C handling (#2)
+- System prompt loaded from `src/weles/prompts/system.md` via `resource_path` (#2)
+
+<!-- Issues #3–5 land here as they are merged -->
 
 ### v0.2 — Personalization
 <!-- Issues #6–12 -->
