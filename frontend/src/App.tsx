@@ -126,7 +126,7 @@ export default function App() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function newChat() {
+  async function newChat(): Promise<string> {
     const session = await createSession()
     setSessions(prev => [session, ...prev])
     setActiveId(session.id)
@@ -138,6 +138,7 @@ export default function App() {
     setToolProgress([])
     setMode('general')
     setPage('chat')
+    return session.id
   }
 
   async function selectSession(id: string) {
@@ -179,8 +180,7 @@ export default function App() {
 
   async function sendMessage() {
     if (!input.trim() || streaming) return
-    if (!activeId) await newChat()
-    const sessionId = activeId!
+    const sessionId = activeId ?? await newChat()
 
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: input.trim() }
     setMessages(prev => [...prev, userMsg])
