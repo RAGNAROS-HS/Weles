@@ -30,6 +30,7 @@ dist/
 # Alembic
 alembic/versions/*.py
 !alembic/versions/.gitkeep
+!alembic/versions/001_initial.py
 
 # Node
 frontend/node_modules/
