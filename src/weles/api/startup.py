@@ -55,8 +55,7 @@ async def startup(state: Any) -> None:
     # 2. Validate ANTHROPIC_API_KEY
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise ConfigurationError(
-            "ANTHROPIC_API_KEY is not set."
-            " Set it in your environment or ~/.weles/.env."
+            "ANTHROPIC_API_KEY is not set. Set it in your environment or ~/.weles/.env."
         )
 
     # 3. Create weles dir if absent
