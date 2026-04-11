@@ -22,7 +22,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Interactive CLI REPL (`uv run weles`) with streaming output and clean `exit`/Ctrl+C handling (#2)
 - System prompt loaded from `src/weles/prompts/system.md` via `resource_path` (#2)
 
-<!-- Issues #3–5 land here as they are merged -->
+- SQLite schema: all 6 tables (`sessions`, `messages`, `profile`, `history`, `preferences`, `settings`) in a single Alembic migration `001_initial` (#3)
+- Default `settings` rows seeded by migration: `follow_up_cadence`, `proactive_surfacing`, `decay_thresholds`, `max_tool_calls_per_turn` (#3)
+- `get_db()` in `src/weles/db/connection.py`; WAL mode enabled, connection cached per-thread (#3)
+
+<!-- Issues #4–5 land here as they are merged -->
 
 ### v0.2 — Personalization
 <!-- Issues #6–12 -->
