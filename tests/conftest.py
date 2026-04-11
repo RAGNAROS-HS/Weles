@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from anthropic.types import RawContentBlockDeltaEvent, RawMessageStopEvent, TextDelta
 from pytest_mock import MockerFixture
 
 
@@ -11,14 +12,12 @@ def mock_claude(mocker: MockerFixture) -> MagicMock:
     """Mock Anthropic client; stream yields a text delta then stops."""
     mock_client = MagicMock()
 
-    text_event = MagicMock()
-    text_event.type = "content_block_delta"
-    text_event.delta = MagicMock()
-    text_event.delta.type = "text_delta"
-    text_event.delta.text = "Test."
-
-    stop_event = MagicMock()
-    stop_event.type = "message_stop"
+    text_event = RawContentBlockDeltaEvent(
+        type="content_block_delta",
+        index=0,
+        delta=TextDelta(type="text_delta", text="Test."),
+    )
+    stop_event = RawMessageStopEvent(type="message_stop")
 
     mock_stream = MagicMock()
     mock_stream.__enter__ = MagicMock(return_value=mock_stream)
@@ -26,7 +25,7 @@ def mock_claude(mocker: MockerFixture) -> MagicMock:
     mock_stream.__iter__ = MagicMock(return_value=iter([text_event, stop_event]))
 
     mock_client.messages.stream.return_value = mock_stream
-    mocker.patch("src.weles.agent.client.get_client", return_value=mock_client)
+    mocker.patch("weles.agent.client.get_client", return_value=mock_client)
     return mock_client  # type: ignore[no-any-return]
 
 
@@ -51,7 +50,8 @@ def tmp_db(tmp_path: Path) -> Path:
 def client(tmp_db: Path) -> object:
     """FastAPI TestClient wired to the temporary database."""
     from fastapi.testclient import TestClient
-    from src.weles.api.main import app
+
+    from weles.api.main import app
 
     with TestClient(app) as c:
         yield c

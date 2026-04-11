@@ -12,6 +12,9 @@ if config.config_file_name is not None:
 
 _default_db = str(Path.home() / ".weles" / "weles.db")
 _db_path = os.getenv("WELES_DB_PATH", _default_db)
+_db_file = Path(_db_path).expanduser()
+_db_file.parent.mkdir(parents=True, exist_ok=True)
+_db_path = str(_db_file)
 config.set_main_option("sqlalchemy.url", f"sqlite:///{_db_path}")
 
 target_metadata = None

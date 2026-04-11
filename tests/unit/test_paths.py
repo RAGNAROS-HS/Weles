@@ -2,7 +2,8 @@ import sys
 from pathlib import Path
 
 import pytest
-from src.weles.utils.paths import resource_path
+
+from weles.utils.paths import resource_path
 
 
 def test_resource_path_normal() -> None:
