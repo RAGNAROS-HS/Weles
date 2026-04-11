@@ -28,11 +28,15 @@ async def _repl() -> None:
         session.add_message("user", user_input)
 
         print("Weles: ", end="", flush=True)
+        reply_parts: list[str] = []
         async for event in stream_response(client, session.get_messages(), [], system):
             if isinstance(event, TextDeltaEvent):
                 print(event.text, end="", flush=True)
+                reply_parts.append(event.text)
             elif isinstance(event, DoneEvent):
                 print()
+        if reply_parts:
+            session.add_message("assistant", "".join(reply_parts))
 
 
 def main() -> None:
