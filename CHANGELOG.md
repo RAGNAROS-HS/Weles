@@ -36,7 +36,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `DELETE /data` wipes and recreates all tables via alembic downgrade + upgrade (#5)
 
 ### v0.2 — Personalization
-<!-- Issues #6–12 -->
+
+#### Added
+- `UserProfile` Pydantic model in `src/weles/profile/models.py`; all fields optional with `None` default (#6)
+- Profile enums: `Build`, `FitnessLevel`, `AestheticStyle`, `BudgetPsychology`, `ActivityLevel`, `LivingSituation`, `DietaryApproach` (#6)
+- `profile_is_empty(profile)` helper; returns `True` when all data fields are `None` (#6)
+- `GET /profile` returns full profile with nulls included (#6)
+- `PATCH /profile` validates enum values and rejects unknown fields with 422; writes `field_timestamps` atomically (#6)
+
+<!-- Issues #7–12 -->
 
 ### v0.3 — Research Engine
 <!-- Issues #13–18 -->
