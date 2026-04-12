@@ -23,9 +23,18 @@ from weles.agent.stream import (
     stream_response,
 )
 from weles.db.connection import get_db
+from weles.db.history_repo import get_history_context
 from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
+from weles.tools.history_tools import ADD_TO_HISTORY_SCHEMA, add_to_history_handler
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
 from weles.utils.errors import ConfigurationError
+
+_MODE_TO_DOMAIN = {
+    "shopping": "shopping",
+    "diet": "diet",
+    "fitness": "fitness",
+    "lifestyle": "lifestyle",
+}
 
 router = APIRouter(tags=["messages"])
 
@@ -125,11 +134,23 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             history[-1]["content"] = history[-1]["content"] + "\n\n" + note
             mem_session.asked_this_session.update(unasked)
 
+        # Inject history context for mode-specific domains
+        history_domain = _MODE_TO_DOMAIN.get(mode)
+        if history_domain:
+            history_ctx = get_history_context(history_domain)
+            if history_ctx:
+                history[-1]["content"] = history[-1]["content"] + "\n\n" + history_ctx
+
         registry = ToolRegistry()
         registry.register(
             "save_profile_field",
             save_profile_field_handler,
             SAVE_PROFILE_FIELD_SCHEMA,
+        )
+        registry.register(
+            "add_to_history",
+            add_to_history_handler,
+            ADD_TO_HISTORY_SCHEMA,
         )
 
         try:

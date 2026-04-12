@@ -55,7 +55,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `save_profile_field` Claude tool in `tools/profile_tools.py`; registered in `ToolRegistry` on every request (#11)
 - Missing profile fields injected as `[System: ...]` note into user turn before each Claude request; each field asked at most once per session (#11)
 
-<!-- Issues #9, #12 -->
+### Added (continued)
+- `add_to_history` Claude tool: records recommended, bought, tried, rated, and skipped items with domain, category, rating, and notes (#12)
+- `follow_up_due_at` auto-set on `status=recommended` based on `follow_up_cadence` setting (weekly = 7d, monthly = 30d, off = null) (#12)
+- `check_in_due_at` auto-set on `status=bought/tried`: 30 days for fitness/diet, 90 days for shopping/lifestyle (#12)
+- `get_history_context(domain)` in `history_repo.py`; injected as `[History — {Domain}]` block into user turn for mode-specific domains (#12)
+- `GET /history?domain=&status=` and `DELETE /history/{id}` endpoints (previously stub, now fully wired) (#12)
+- History page in frontend: filterable table by domain and status, per-row delete button (#12)
+
+<!-- Issue #9 -->
 
 ### v0.3 — Research Engine
 

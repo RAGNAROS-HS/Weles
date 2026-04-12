@@ -37,6 +37,11 @@ def tmp_db(tmp_path: Path) -> Path:
     os.environ["WELES_DB_PATH"] = str(db_path)
     os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 
+    # Reset the thread-local cached connection so get_db() opens the new path.
+    from weles.db.connection import _local
+
+    _local.conn = None
+
     from alembic import command
     from alembic.config import Config
 
@@ -45,6 +50,7 @@ def tmp_db(tmp_path: Path) -> Path:
 
     yield db_path  # type: ignore[misc]
 
+    _local.conn = None
     del os.environ["WELES_DB_PATH"]
 
 
