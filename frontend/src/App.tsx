@@ -24,15 +24,26 @@ const DECAY_LABELS: Record<string, string> = {
   taste_lifestyle: 'Taste & lifestyle (days)',
 }
 
+const DECAY_DEFAULTS: Record<string, number> = {
+  goals: 60,
+  fitness_level: 90,
+  dietary_approach: 90,
+  body_metrics: 180,
+  taste_lifestyle: 365,
+}
+
 function SettingsPage({ onBack }: { onBack: () => void }) {
   const [settings, setSettings] = useState<Record<string, unknown>>({})
   const [confirmClear, setConfirmClear] = useState(false)
-  const [decayDraft, setDecayDraft] = useState<Record<string, number>>({})
+  const [decayDraft, setDecayDraft] = useState<Record<string, number>>(DECAY_DEFAULTS)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
 
   useEffect(() => {
     getSettings().then(s => {
       setSettings(s)
-      setDecayDraft((s.decay_thresholds as Record<string, number>) ?? {})
+      const fromServer = (s.decay_thresholds as Record<string, number>) ?? {}
+      setDecayDraft({ ...DECAY_DEFAULTS, ...fromServer })
+      setSettingsLoaded(true)
     })
   }, [])
 
@@ -44,7 +55,8 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
   async function saveDecay() {
     const updated = await patchSettings({ decay_thresholds: decayDraft })
     setSettings(updated)
-    setDecayDraft((updated.decay_thresholds as Record<string, number>) ?? {})
+    const fromServer = (updated.decay_thresholds as Record<string, number>) ?? {}
+    setDecayDraft({ ...DECAY_DEFAULTS, ...fromServer })
   }
 
   async function handleClearData() {
@@ -86,17 +98,17 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
 
       <section>
         <h2>Profile decay thresholds</h2>
-        {Object.entries(decayDraft).map(([key, val]) => (
+        {Object.keys(DECAY_LABELS).map(key => (
           <label key={key}>
-            {DECAY_LABELS[key] ?? key}
+            {DECAY_LABELS[key]}
             <input
               type="number"
-              value={val}
+              value={decayDraft[key] ?? DECAY_DEFAULTS[key]}
               onChange={e => setDecayDraft(prev => ({ ...prev, [key]: Number(e.target.value) }))}
             />
           </label>
         ))}
-        <button onClick={saveDecay}>Save</button>
+        <button onClick={saveDecay} disabled={!settingsLoaded}>Save</button>
       </section>
 
       <section>
