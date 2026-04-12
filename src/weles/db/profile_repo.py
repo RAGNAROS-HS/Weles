@@ -80,7 +80,13 @@ def update_profile(patch: dict[str, Any]) -> UserProfile:
 def get_preferences() -> list[Preference]:
     conn = get_db()
     rows = conn.execute("SELECT * FROM preferences ORDER BY created_at ASC").fetchall()
-    return [Preference.model_validate(dict(row)) for row in rows]
+    result: list[Preference] = []
+    for row in rows:
+        try:
+            result.append(Preference.model_validate(dict(row)))
+        except ValidationError:
+            logger.exception("Skipping invalid preference row id=%s", row["id"])
+    return result
 
 
 def set_first_session_at(dt: datetime) -> None:

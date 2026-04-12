@@ -57,8 +57,6 @@ def build_profile_block(profile: UserProfile, preferences: list[Preference]) -> 
         diet_parts: list[str] = []
         if profile.dietary_restrictions:
             diet_parts.append(f"Restrictions: {profile.dietary_restrictions}.")
-        else:
-            diet_parts.append("No restrictions.")
         if profile.dietary_approach is not None:
             diet_parts.append(f"Approach: {profile.dietary_approach}.")
         if profile.dietary_preferences:
