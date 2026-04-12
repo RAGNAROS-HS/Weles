@@ -100,5 +100,6 @@ def profile_is_empty(profile: UserProfile) -> bool:
     return all(getattr(profile, f) is None for f in _PROFILE_DATA_FIELDS)
 
 
-def parse_field_timestamps(profile: UserProfile) -> dict:
-    return json.loads(profile.field_timestamps or "{}")
+def parse_field_timestamps(profile: UserProfile) -> dict[str, str]:
+    result: dict[str, str] = json.loads(profile.field_timestamps or "{}")
+    return result
