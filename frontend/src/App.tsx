@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { clearData, createSession, deleteHistoryItem, deleteSession, getSettings, listHistory, listSessions, patchSession, patchSettings } from './api'
-import type { ChatMessage, HistoryItem, Mode, Session, ToolProgress } from './types'
+import { clearData, createSession, deleteHistoryItem, deletePreference, deleteSession, getProfile, getSettings, listHistory, listPreferences, listSessions, patchProfile, patchSession, patchSettings } from './api'
+import type { ChatMessage, HistoryItem, Mode, Preference, Session, ToolProgress, UserProfile } from './types'
 import './App.css'
 
 const MODES: Mode[] = ['general', 'shopping', 'diet', 'fitness', 'lifestyle']
@@ -121,6 +121,223 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <button className="danger-btn" onClick={() => setConfirmClear(true)}>Clear all data</button>
+        )}
+      </section>
+    </div>
+  )
+}
+
+// ── Information page ──────────────────────────────────────────────────────
+
+type DecayThresholds = Record<string, number>
+
+const FIELD_DECAY_CATEGORY: Record<string, keyof DecayThresholds> = {
+  fitness_goal: 'goals', dietary_goal: 'goals', lifestyle_focus: 'goals',
+  fitness_level: 'fitness_level',
+  dietary_approach: 'dietary_approach',
+  height_cm: 'body_metrics', weight_kg: 'body_metrics', build: 'body_metrics',
+  aesthetic_style: 'taste_lifestyle', brand_rejections: 'taste_lifestyle',
+  climate: 'taste_lifestyle', activity_level: 'taste_lifestyle',
+  living_situation: 'taste_lifestyle', country: 'taste_lifestyle',
+  budget_psychology: 'taste_lifestyle', injury_history: 'taste_lifestyle',
+  dietary_restrictions: 'taste_lifestyle', dietary_preferences: 'taste_lifestyle',
+}
+
+const FIELD_ENUMS: Record<string, string[]> = {
+  build: ['lean', 'athletic', 'average', 'heavy'],
+  fitness_level: ['sedentary', 'beginner', 'intermediate', 'advanced'],
+  dietary_approach: ['keto', 'vegan', 'omnivore', 'carnivore', 'flexible'],
+  aesthetic_style: ['minimal', 'technical', 'classic', 'mixed'],
+  budget_psychology: ['buy_once_buy_right', 'good_enough', 'context_dependent'],
+  activity_level: ['low', 'moderate', 'high'],
+  living_situation: ['urban', 'suburban', 'rural'],
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  height_cm: 'Height (cm)', weight_kg: 'Weight (kg)', build: 'Build',
+  fitness_level: 'Fitness level', injury_history: 'Injury history',
+  dietary_restrictions: 'Dietary restrictions', dietary_preferences: 'Dietary preferences',
+  dietary_approach: 'Dietary approach', aesthetic_style: 'Aesthetic style',
+  brand_rejections: 'Brand rejections', climate: 'Climate', country: 'Country',
+  activity_level: 'Activity level', living_situation: 'Living situation',
+  budget_psychology: 'Budget psychology', fitness_goal: 'Fitness goal',
+  dietary_goal: 'Dietary goal', lifestyle_focus: 'Lifestyle focus',
+}
+
+const INFO_SECTIONS: { title: string; fields: string[] }[] = [
+  { title: 'Identity & Body', fields: ['height_cm', 'weight_kg', 'build', 'fitness_level', 'injury_history'] },
+  { title: 'Diet', fields: ['dietary_restrictions', 'dietary_preferences', 'dietary_approach'] },
+  { title: 'Style & Taste', fields: ['aesthetic_style', 'brand_rejections'] },
+  { title: 'Lifestyle', fields: ['climate', 'country', 'activity_level', 'living_situation'] },
+  { title: 'Budget', fields: ['budget_psychology'] },
+  { title: 'Goals', fields: ['fitness_goal', 'dietary_goal', 'lifestyle_focus'] },
+]
+
+function isStale(field: string, timestamps: Record<string, string>, thresholds: DecayThresholds): boolean {
+  const ts = timestamps[field]
+  if (!ts) return false
+  const category = FIELD_DECAY_CATEGORY[field]
+  if (!category) return false
+  const days = thresholds[category]
+  if (!days) return false
+  return Date.now() - Date.parse(ts) > days * 86400000
+}
+
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - Date.parse(iso)) / 86400000)
+}
+
+function ProfileField({
+  field, value, timestamp, stale, onSave,
+}: {
+  field: string
+  value: string | null
+  timestamp: string | null
+  stale: boolean
+  onSave: (field: string, value: string) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value ?? '')
+  const enumOptions = FIELD_ENUMS[field]
+
+  async function save() {
+    if (draft.trim() === (value ?? '')) { setEditing(false); return }
+    await onSave(field, draft.trim())
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="info-field editing">
+        <span className="info-field-label">{FIELD_LABELS[field]}</span>
+        {enumOptions ? (
+          <select
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onBlur={save}
+            autoFocus
+          >
+            <option value="">— not set —</option>
+            {enumOptions.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        ) : (
+          <input
+            type={field === 'height_cm' || field === 'weight_kg' ? 'number' : 'text'}
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onBlur={save}
+            onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
+            autoFocus
+          />
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="info-field" onClick={() => { setDraft(value ?? ''); setEditing(true) }}>
+      <span className="info-field-label">{FIELD_LABELS[field]}</span>
+      <span className={`info-field-value${value ? '' : ' unset'}`}>{value ?? 'Not set'}</span>
+      <span className="info-field-meta">
+        {stale && <span className="stale-dot" title={`Last set ${daysSince(timestamp!)} days ago`}>●</span>}
+        {timestamp && <span className="info-field-date">{timestamp.slice(0, 10)}</span>}
+      </span>
+    </div>
+  )
+}
+
+function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHistory: () => void }) {
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [prefs, setPrefs] = useState<Preference[]>([])
+  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [thresholds, setThresholds] = useState<DecayThresholds>({})
+
+  useEffect(() => {
+    Promise.all([getProfile(), listPreferences(), listHistory(), getSettings()]).then(
+      ([p, pr, h, s]) => {
+        setProfile(p)
+        setPrefs(pr)
+        setHistory(h)
+        setThresholds((s.decay_thresholds as DecayThresholds) ?? {})
+      }
+    )
+  }, [])
+
+  async function saveField(field: string, value: string) {
+    const updated = await patchProfile({ [field]: value || null })
+    setProfile(updated)
+  }
+
+  async function handleDeletePref(id: string) {
+    await deletePreference(id)
+    setPrefs(prev => prev.filter(p => p.id !== id))
+  }
+
+  const timestamps: Record<string, string> = profile?.field_timestamps
+    ? JSON.parse(profile.field_timestamps)
+    : {}
+
+  // History summary: count per domain per status
+  const historySummary: Record<string, Record<string, number>> = {}
+  for (const item of history) {
+    if (!historySummary[item.domain]) historySummary[item.domain] = {}
+    historySummary[item.domain][item.status] = (historySummary[item.domain][item.status] ?? 0) + 1
+  }
+
+  if (!profile) return <div className="info-page"><button className="back-btn" onClick={onBack}>← Back</button><p>Loading…</p></div>
+
+  return (
+    <div className="info-page">
+      <button className="back-btn" onClick={onBack}>← Back</button>
+      <h1>Information</h1>
+
+      {INFO_SECTIONS.map(section => (
+        <section key={section.title} className="info-section">
+          <h2>{section.title}</h2>
+          {section.fields.map(field => (
+            <ProfileField
+              key={field}
+              field={field}
+              value={(profile as unknown as Record<string, string | null>)[field]}
+              timestamp={timestamps[field] ?? null}
+              stale={isStale(field, timestamps, thresholds)}
+              onSave={saveField}
+            />
+          ))}
+        </section>
+      ))}
+
+      <section className="info-section">
+        <h2>Learned Preferences</h2>
+        {prefs.length === 0
+          ? <p className="info-empty">No learned preferences yet.</p>
+          : prefs.map(pref => (
+            <div key={pref.id} className="info-pref-row">
+              <span className="info-pref-dim">{pref.dimension}</span>
+              <span className="info-pref-value">{pref.value}</span>
+              {pref.reason && <span className="info-pref-reason">{pref.reason}</span>}
+              <span className={`info-pref-source source-${pref.source}`}>{pref.source}</span>
+              <button className="del-btn" onClick={() => handleDeletePref(pref.id)}>×</button>
+            </div>
+          ))
+        }
+      </section>
+
+      <section className="info-section">
+        <h2>History Summary</h2>
+        {Object.keys(historySummary).length === 0
+          ? <p className="info-empty">No history yet.</p>
+          : Object.entries(historySummary).map(([domain, counts]) => (
+            <div key={domain} className="info-history-row">
+              <span className="info-history-domain">{domain}</span>
+              <span className="info-history-counts">
+                {Object.entries(counts).map(([status, n]) => `${n} ${status}`).join(', ')}
+              </span>
+            </div>
+          ))
+        }
+        {history.length > 0 && (
+          <button className="info-history-link" onClick={onGoHistory}>View full history →</button>
         )}
       </section>
     </div>
@@ -361,6 +578,10 @@ export default function App() {
 
   if (page === 'settings') {
     return <SettingsPage onBack={() => setPage('chat')} />
+  }
+
+  if (page === 'info') {
+    return <InformationPage onBack={() => setPage('chat')} onGoHistory={() => setPage('history')} />
   }
 
   if (page === 'history') {
