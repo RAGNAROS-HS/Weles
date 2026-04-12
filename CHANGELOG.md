@@ -46,8 +46,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `build_system_prompt(mode, profile, preferences)` in `prompts.py`; returns Anthropic system array with up to 3 blocks (#7)
 - Mode addendum prompts for `shopping`, `diet`, `fitness`, `lifestyle` in `src/weles/prompts/modes/` (#7)
 - Mode selector pill tabs call `PATCH /sessions/{id}` on change; mode applies to all subsequent messages (#7)
+- `Preference` Pydantic model and `get_preferences()` in `profile_repo.py` (#8)
+- `build_profile_block(profile, preferences)` in `profile/context.py`; serialises non-null fields into a compact `[User Profile]` block; returns `None` when empty (#8)
+- Profile + preferences injected as Block 3 of every Claude request; block regenerated fresh on each message (#8)
+- Token warning logged when profile block exceeds 500 tokens (#8)
 
-<!-- Issues #7–12 -->
+<!-- Issues #9–12 -->
 
 ### v0.3 — Research Engine
 <!-- Issues #13–18 -->

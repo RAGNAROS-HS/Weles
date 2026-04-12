@@ -20,11 +20,10 @@ def test_unknown_mode_raises_value_error() -> None:
         build_system_prompt("unknown_mode", None, [])
 
 
-def test_non_empty_profile_still_two_blocks_until_issue_8() -> None:
-    # profile context stub returns "" so Block 3 is skipped until #8 lands
+def test_non_empty_profile_adds_third_block() -> None:
     profile = UserProfile(fitness_level="beginner")
     blocks = build_system_prompt("shopping", profile, [])
-    assert len(blocks) == 2
+    assert len(blocks) == 3
 
 
 def test_empty_profile_does_not_add_third_block() -> None:

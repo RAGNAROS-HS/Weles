@@ -96,6 +96,15 @@ class UserProfile(BaseModel):
     field_timestamps: str | None = None
 
 
+class Preference(BaseModel):
+    id: str
+    dimension: str
+    value: str
+    reason: str | None = None
+    source: str
+    created_at: str | None = None
+
+
 def profile_is_empty(profile: UserProfile) -> bool:
     return all(getattr(profile, f) is None for f in _PROFILE_DATA_FIELDS)
 
