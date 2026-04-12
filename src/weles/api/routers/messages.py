@@ -25,8 +25,10 @@ from weles.agent.stream import (
 from weles.db.connection import get_db
 from weles.db.history_repo import get_history_context
 from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
+from weles.db.settings_repo import get_setting
 from weles.tools.history_tools import ADD_TO_HISTORY_SCHEMA, add_to_history_handler
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
+from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
 from weles.utils.errors import ConfigurationError
 
 _MODE_TO_DOMAIN = {
@@ -141,7 +143,8 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             if history_ctx:
                 history[-1]["content"] = history[-1]["content"] + "\n\n" + history_ctx
 
-        registry = ToolRegistry()
+        max_calls = int(get_setting("max_tool_calls_per_turn") or 6)
+        registry = ToolRegistry(max_calls=max_calls)
         registry.register(
             "save_profile_field",
             save_profile_field_handler,
@@ -151,6 +154,11 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             "add_to_history",
             add_to_history_handler,
             ADD_TO_HISTORY_SCHEMA,
+        )
+        registry.register(
+            "search_reddit",
+            search_reddit_handler,
+            SEARCH_REDDIT_SCHEMA,
         )
 
         try:

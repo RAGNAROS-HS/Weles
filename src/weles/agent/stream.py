@@ -108,7 +108,7 @@ async def stream_response(
             description = _build_description(tool_use.name, tool_use.input)
             yield ToolStartEvent(tool=tool_use.name, description=description)
             try:
-                result = registry.dispatch(tool_use.name, tool_use.input)
+                result = await registry.adispatch(tool_use.name, tool_use.input)
                 yield ToolEndEvent(tool=tool_use.name, result_summary=result.summary)
                 result_content = str(result.data)
             except Exception as exc:
