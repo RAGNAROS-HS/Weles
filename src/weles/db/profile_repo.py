@@ -1,7 +1,9 @@
+import json
 from datetime import datetime
 from typing import Any
 
 from weles.db.connection import get_db
+from weles.profile.models import UserProfile
 
 _PROFILE_FIELDS = {
     "height_cm",
@@ -25,21 +27,15 @@ _PROFILE_FIELDS = {
 }
 
 
-def get_profile() -> dict[str, Any]:
+def get_profile() -> UserProfile:
     conn = get_db()
     row = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
     if row is None:
-        return {f: None for f in _PROFILE_FIELDS} | {
-            "id": 1,
-            "first_session_at": None,
-            "field_timestamps": "{}",
-        }
-    return dict(row)
+        return UserProfile()
+    return UserProfile.model_validate(dict(row))
 
 
-def update_profile(patch: dict[str, Any]) -> dict[str, Any]:
-    import json
-
+def update_profile(patch: dict[str, Any]) -> UserProfile:
     conn = get_db()
     existing = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
 
@@ -60,7 +56,8 @@ def update_profile(patch: dict[str, Any]) -> dict[str, Any]:
         (json.dumps(timestamps),),
     )
     conn.commit()
-    return dict(conn.execute("SELECT * FROM profile WHERE id = 1").fetchone())
+    row = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+    return UserProfile.model_validate(dict(row))
 
 
 def set_first_session_at(dt: datetime) -> None:
