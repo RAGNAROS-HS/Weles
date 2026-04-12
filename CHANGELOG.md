@@ -50,8 +50,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `build_profile_block(profile, preferences)` in `profile/context.py`; serialises non-null fields into a compact `[User Profile]` block; returns `None` when empty (#8)
 - Profile + preferences injected as Block 3 of every Claude request; block regenerated fresh on each message (#8)
 - Token warning logged when profile block exceeds 500 tokens (#8)
+- Settings page with human-readable decay threshold labels, Save button, and permanent-delete confirmation modal (#10)
 
-<!-- Issues #9–12 -->
+<!-- Issues #9, #11–12 -->
 
 ### v0.3 — Research Engine
 <!-- Issues #13–18 -->

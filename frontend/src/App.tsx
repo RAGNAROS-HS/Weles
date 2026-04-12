@@ -16,13 +16,24 @@ const MODE_LABELS: Record<Mode, string> = {
 
 // ── Settings page ────────────────────────────────────────────────────────────
 
+const DECAY_LABELS: Record<string, string> = {
+  goals: 'Goals (days)',
+  fitness_level: 'Fitness level (days)',
+  dietary_approach: 'Dietary approach (days)',
+  body_metrics: 'Body metrics (days)',
+  taste_lifestyle: 'Taste & lifestyle (days)',
+}
+
 function SettingsPage({ onBack }: { onBack: () => void }) {
   const [settings, setSettings] = useState<Record<string, unknown>>({})
   const [confirmClear, setConfirmClear] = useState(false)
-  const [cleared, setCleared] = useState(false)
+  const [decayDraft, setDecayDraft] = useState<Record<string, number>>({})
 
   useEffect(() => {
-    getSettings().then(setSettings)
+    getSettings().then(s => {
+      setSettings(s)
+      setDecayDraft((s.decay_thresholds as Record<string, number>) ?? {})
+    })
   }, [])
 
   async function save(patch: Record<string, unknown>) {
@@ -30,13 +41,16 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
     setSettings(updated)
   }
 
-  async function handleClearData() {
-    await clearData()
-    setConfirmClear(false)
-    setCleared(true)
+  async function saveDecay() {
+    const updated = await patchSettings({ decay_thresholds: decayDraft })
+    setSettings(updated)
+    setDecayDraft((updated.decay_thresholds as Record<string, number>) ?? {})
   }
 
-  const decayThresholds = (settings.decay_thresholds as Record<string, number>) ?? {}
+  async function handleClearData() {
+    await clearData()
+    onBack()
+  }
 
   return (
     <div className="settings-page">
@@ -71,27 +85,25 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
       </section>
 
       <section>
-        <h2>Profile decay thresholds (days)</h2>
-        {Object.entries(decayThresholds).map(([key, val]) => (
+        <h2>Profile decay thresholds</h2>
+        {Object.entries(decayDraft).map(([key, val]) => (
           <label key={key}>
-            {key}
+            {DECAY_LABELS[key] ?? key}
             <input
               type="number"
               value={val}
-              onChange={e =>
-                save({ decay_thresholds: { ...decayThresholds, [key]: Number(e.target.value) } })
-              }
+              onChange={e => setDecayDraft(prev => ({ ...prev, [key]: Number(e.target.value) }))}
             />
           </label>
         ))}
+        <button onClick={saveDecay}>Save</button>
       </section>
 
       <section>
         <h2>Data</h2>
-        {cleared && <p className="cleared-notice">All data cleared.</p>}
         {confirmClear ? (
           <div className="confirm-modal">
-            <p>This will delete all sessions, history, profile, and preferences. Cannot be undone.</p>
+            <p>This will permanently delete all sessions, history, profile, and preferences. Cannot be undone.</p>
             <button onClick={handleClearData}>Confirm</button>
             <button onClick={() => setConfirmClear(false)}>Cancel</button>
           </div>
