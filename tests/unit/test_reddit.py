@@ -102,7 +102,7 @@ async def test_user_agent_header_present(httpx_mock: HTTPXMock, mocker) -> None:
     await search_reddit("test")
 
     request = httpx_mock.get_requests()[0]
-    assert request.headers["User-Agent"] == "Weles/0.1"
+    assert "Mozilla/5.0" in request.headers["User-Agent"]
 
 
 @pytest.mark.asyncio

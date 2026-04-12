@@ -7,7 +7,17 @@ from weles.agent.dispatch import ToolResult
 from weles.utils.errors import RedditUnavailableError
 
 _SEMAPHORE = asyncio.Semaphore(1)
-_USER_AGENT = "Weles/0.1"
+_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/124.0.0.0 Safari/537.36"
+)
+_HEADERS = {
+    "User-Agent": _USER_AGENT,
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+}
 _MAX_RETRIES = 3
 _BASE = "https://www.reddit.com"
 
@@ -115,7 +125,6 @@ async def search_reddit(
     sort: str = "relevance",
     time_filter: str = "year",
 ) -> list[RedditPost]:
-    headers = {"User-Agent": _USER_AGENT}
     base_params: dict[str, Any] = {
         "q": query,
         "sort": sort,
@@ -124,7 +133,7 @@ async def search_reddit(
         "raw_json": "1",
     }
 
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=_HEADERS) as client:
         if subreddits:
             seen_urls: set[str] = set()
             extended: list[dict[str, Any]] = []
