@@ -179,8 +179,6 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
                     yield sse
                 if isinstance(event, TextDeltaEvent):
                     reply_parts.append(event.text)
-                elif isinstance(event, DoneEvent):
-                    break
         except Exception as exc:
             yield {"event": "error", "data": json.dumps({"message": str(exc)})}
             return
