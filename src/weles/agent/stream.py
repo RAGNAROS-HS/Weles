@@ -10,6 +10,7 @@ from anthropic.types import (
     TextDelta,
     ToolUseBlock,
 )
+from langsmith import traceable
 
 if TYPE_CHECKING:
     from weles.agent.dispatch import ToolRegistry
@@ -66,6 +67,7 @@ def _build_description(tool_name: str, tool_input: dict[str, Any]) -> str:
     return f"Running {tool_name}…"
 
 
+@traceable(run_type="chain", name="agent_loop")
 async def stream_response(
     client: anthropic.Anthropic,
     messages: list[dict[str, Any]],

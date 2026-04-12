@@ -2,6 +2,8 @@ import inspect
 from collections.abc import Callable
 from typing import Any, NamedTuple
 
+from langsmith import traceable
+
 from weles.utils.errors import MaxToolCallsError, ToolNotFoundError
 
 
@@ -33,6 +35,7 @@ class ToolRegistry:
         s = str(result)
         return ToolResult(summary=s, data=s)
 
+    @traceable(run_type="tool")
     async def adispatch(self, tool_name: str, tool_input: dict[str, Any]) -> ToolResult:
         if tool_name not in self._handlers:
             raise ToolNotFoundError(f"Unknown tool: {tool_name!r}")
