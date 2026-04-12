@@ -40,9 +40,9 @@ Browser  ←→  FastAPI (uvicorn)  ←→  Claude API
 
 | Module | Responsibility |
 |---|---|
-| `agent/client.py` | `get_client() -> AsyncAnthropic`; reads env |
-| `agent/stream.py` | `stream_response()` → `AsyncIterator[AgentEvent]`; owns the Anthropic streaming loop |
-| `agent/dispatch.py` | `ToolRegistry`: register, dispatch, schema export; enforces tool call cap |
+| `agent/client.py` | `get_client() -> Anthropic`; wraps client with `wrap_anthropic` for LangSmith tracing |
+| `agent/stream.py` | `stream_response()` → `AsyncIterator[AgentEvent]`; `@traceable` parent span for the full agent loop |
+| `agent/dispatch.py` | `ToolRegistry`: register, dispatch, schema export; enforces tool call cap; `adispatch` is `@traceable(run_type="tool")` |
 | `agent/session.py` | `Session`: message list, compression, token estimation |
 | `agent/prompts.py` | `build_system_prompt(mode, profile, preferences)` |
 | `agent/context.py` | `check_missing_fields(mode, profile)` |
@@ -124,6 +124,22 @@ At most one `prompt` surfaces per session. `notices` are independent (shown as d
 
 ---
 
+## LangSmith tracing
+
+Enabled when `LANGSMITH_TRACING=true`. Three layers:
+
+| Layer | What it traces |
+|---|---|
+| `wrap_anthropic(client)` in `client.py` | Every Claude API call: model, inputs, outputs, token usage, latency |
+| `@traceable(run_type="chain")` on `stream_response` | Full agent loop as a parent span, including multi-turn tool-use cycles |
+| `@traceable(run_type="tool")` on `adispatch` | Each individual tool dispatch: name, input, result |
+
+Set `LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com` for EU-region accounts.
+
+`stream_response` must exhaust naturally (no early `break` on `DoneEvent` in the consumer) — closing the generator mid-flight throws `GeneratorExit`, which LangSmith logs as an error.
+
+---
+
 ## Key invariants
 
 | Invariant | Where enforced |
@@ -134,3 +150,4 @@ At most one `prompt` surfaces per session. `notices` are independent (shown as d
 | Tool errors never abort SSE stream | `agent/dispatch.py` |
 | Last 10 messages never compressed | `agent/session.py` |
 | All file reads use `resource_path` | `utils/paths.py` |
+| `stream_response` must be consumed to exhaustion | `api/routers/messages.py` |

@@ -17,6 +17,7 @@ dependencies = [
     "pillow>=11.0.0",
     "python-dotenv>=1.0.0",
     "sse-starlette>=2.0.0",
+    "langsmith>=0.7.30",
 ]
 
 [project.scripts]
@@ -55,6 +56,7 @@ module = [
     "alembic.*",
     "pystray.*",
     "sse_starlette.*",
+    "langsmith.*",
 ]
 ignore_missing_imports = true
 
