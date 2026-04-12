@@ -93,7 +93,7 @@ class UserProfile(BaseModel):
     dietary_goal: str | None = None
     lifestyle_focus: str | None = None
     first_session_at: str | None = None
-    field_timestamps: str | None = "{}"
+    field_timestamps: str | None = None
 
 
 def profile_is_empty(profile: UserProfile) -> bool:

@@ -1,9 +1,14 @@
 import json
+import logging
 from datetime import datetime
 from typing import Any
 
+from pydantic import ValidationError
+
 from weles.db.connection import get_db
 from weles.profile.models import UserProfile
+
+logger = logging.getLogger(__name__)
 
 _PROFILE_FIELDS = {
     "height_cm",
@@ -32,10 +37,18 @@ def get_profile() -> UserProfile:
     row = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
     if row is None:
         return UserProfile()
-    return UserProfile.model_validate(dict(row))
+    try:
+        return UserProfile.model_validate(dict(row))
+    except ValidationError:
+        logger.exception("Profile row contains invalid data; returning empty profile")
+        return UserProfile()
 
 
 def update_profile(patch: dict[str, Any]) -> UserProfile:
+    unknown = set(patch) - _PROFILE_FIELDS
+    if unknown:
+        raise ValueError(f"Unknown profile fields: {sorted(unknown)}")
+
     conn = get_db()
     existing = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
 
@@ -57,7 +70,11 @@ def update_profile(patch: dict[str, Any]) -> UserProfile:
     )
     conn.commit()
     row = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
-    return UserProfile.model_validate(dict(row))
+    try:
+        return UserProfile.model_validate(dict(row))
+    except ValidationError:
+        logger.exception("Profile row contains invalid data after update; returning empty profile")
+        return UserProfile()
 
 
 def set_first_session_at(dt: datetime) -> None:

@@ -20,7 +20,8 @@ async def patch_profile(body: dict[str, Any]) -> UserProfile:
     if unknown:
         raise HTTPException(status_code=422, detail=f"Unknown fields: {sorted(unknown)}")
     try:
-        UserProfile.model_validate(body)
+        validated = UserProfile.model_validate(body)
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=exc.errors()) from exc
-    return update_profile(body)
+    patch = validated.model_dump(exclude_unset=True, mode="json")
+    return update_profile(patch)
