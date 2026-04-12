@@ -21,7 +21,7 @@ from weles.agent.stream import (
     stream_response,
 )
 from weles.db.connection import get_db
-from weles.db.profile_repo import set_first_session_at
+from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
 from weles.utils.errors import ConfigurationError
 
 router = APIRouter(tags=["messages"])
@@ -93,7 +93,11 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
         history = _load_history(session_id)
         session_row = _get_session(session_id)
         mode = session_row.get("mode", "general")
-        system = build_system_prompt(mode)
+        try:
+            system = build_system_prompt(mode, get_profile(), get_preferences())
+        except ValueError as exc:
+            yield {"event": "error", "data": json.dumps({"message": str(exc)})}
+            return
         registry = ToolRegistry()
 
         try:

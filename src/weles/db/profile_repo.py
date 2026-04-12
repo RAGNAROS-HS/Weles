@@ -6,7 +6,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from weles.db.connection import get_db
-from weles.profile.models import UserProfile
+from weles.profile.models import Preference, UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +75,12 @@ def update_profile(patch: dict[str, Any]) -> UserProfile:
     except ValidationError:
         logger.exception("Profile row contains invalid data after update; returning empty profile")
         return UserProfile()
+
+
+def get_preferences() -> list[Preference]:
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM preferences ORDER BY created_at ASC").fetchall()
+    return [Preference.model_validate(dict(row)) for row in rows]
 
 
 def set_first_session_at(dt: datetime) -> None:

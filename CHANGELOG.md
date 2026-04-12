@@ -43,8 +43,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `profile_is_empty(profile)` helper; returns `True` when all data fields are `None` (#6)
 - `GET /profile` returns full profile with nulls included (#6)
 - `PATCH /profile` validates enum values and rejects unknown fields with 422; writes `field_timestamps` atomically (#6)
+- `Preference` Pydantic model and `get_preferences()` in `profile_repo.py` (#8)
+- `build_profile_block(profile, preferences)` in `profile/context.py`; serialises non-null fields into a compact `[User Profile]` block; returns `None` when empty (#8)
+- Profile + preferences injected as Block 3 of every Claude request; block regenerated fresh on each message (#8)
+- Token warning logged when profile block exceeds 500 tokens (#8)
 
-<!-- Issues #7–12 -->
+<!-- Issues #9–12 -->
 
 ### v0.3 — Research Engine
 <!-- Issues #13–18 -->
