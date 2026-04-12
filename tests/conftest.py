@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from anthropic.types import RawContentBlockDeltaEvent, RawMessageStopEvent, TextDelta
@@ -26,6 +26,7 @@ def mock_claude(mocker: MockerFixture) -> MagicMock:
 
     mock_client.messages.stream.return_value = mock_stream
     mocker.patch("weles.agent.client.get_client", return_value=mock_client)
+    mocker.patch("weles.api.routers.messages.get_client", return_value=mock_client)
     return mock_client  # type: ignore[no-any-return]
 
 
@@ -34,6 +35,7 @@ def tmp_db(tmp_path: Path) -> Path:
     """Temporary SQLite DB with all Alembic migrations applied."""
     db_path = tmp_path / "weles.db"
     os.environ["WELES_DB_PATH"] = str(db_path)
+    os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 
     from alembic import command
     from alembic.config import Config
@@ -53,5 +55,11 @@ def client(tmp_db: Path) -> object:
 
     from weles.api.main import app
 
-    with TestClient(app) as c:
+    # Bypass startup() side-effects (env validation, port check, re-migration).
+    # tmp_db already ran alembic; we set state flags manually.
+    async def _fake_startup(state: object) -> None:
+        state.web_search_available = False  # type: ignore[attr-defined]
+        state.is_first_run = True  # type: ignore[attr-defined]
+
+    with patch("weles.api.startup.startup", new=_fake_startup), TestClient(app) as c:
         yield c

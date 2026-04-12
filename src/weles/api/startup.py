@@ -28,25 +28,31 @@ _DEFAULT_SETTINGS = [
 
 
 def check_port_free() -> None:
-    """Exit with a readable message if WELES_PORT is already bound."""
+    """Exit with a readable message if WELES_PORT is already bound by another process."""
     port = int(os.getenv("WELES_PORT", "8000"))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(0.1)
     try:
-        sock.bind(("127.0.0.1", port))
-    except OSError:
+        sock.connect(("127.0.0.1", port))
+        # Connection succeeded — something else is already listening on this port
+        sock.close()
         print(
             f"[ERROR] Port {port} is already in use."
             " Stop the existing Weles process and try again.",
             file=sys.stderr,
         )
         sys.exit(1)
+    except OSError:
+        # Connection refused or timed out — port is free
+        pass
     finally:
         sock.close()
 
 
 async def startup(state: Any) -> None:
     """Initialise app state: validate env, run migrations, seed settings."""
-    # 1. Load ~/.weles/.env if it exists — supplements env, does not override shell
+    # 1. Load repo-root .env then ~/.weles/.env — neither overrides shell env
+    load_dotenv(override=False)
     env_file = _WELES_DIR / ".env"
     if env_file.exists():
         load_dotenv(env_file, override=False)
