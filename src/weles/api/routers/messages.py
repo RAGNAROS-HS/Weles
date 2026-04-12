@@ -9,8 +9,10 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from weles.agent.client import get_client
+from weles.agent.context import check_missing_fields
 from weles.agent.dispatch import ToolRegistry
 from weles.agent.prompts import build_system_prompt
+from weles.agent.session import Session
 from weles.agent.stream import (
     AgentEvent,
     DoneEvent,
@@ -22,9 +24,19 @@ from weles.agent.stream import (
 )
 from weles.db.connection import get_db
 from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
+from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
 from weles.utils.errors import ConfigurationError
 
 router = APIRouter(tags=["messages"])
+
+# In-memory per-session state (survives requests, reset on server restart)
+_sessions: dict[str, Session] = {}
+
+
+def _get_or_create_session(session_id: str) -> Session:
+    if session_id not in _sessions:
+        _sessions[session_id] = Session()
+    return _sessions[session_id]
 
 
 class MessageBody(BaseModel):
@@ -93,12 +105,32 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
         history = _load_history(session_id)
         session_row = _get_session(session_id)
         mode = session_row.get("mode", "general")
+        profile = get_profile()
         try:
-            system = build_system_prompt(mode, get_profile(), get_preferences())
+            system = build_system_prompt(mode, profile, get_preferences())
         except ValueError as exc:
             yield {"event": "error", "data": json.dumps({"message": str(exc)})}
             return
+
+        # Inject missing-field note into the user turn
+        mem_session = _get_or_create_session(session_id)
+        missing = check_missing_fields(mode, profile)
+        unasked = [f for f in missing if f not in mem_session.asked_this_session]
+        if unasked:
+            note = (
+                f"[System: Profile fields unset and relevant: {unasked}. "
+                "Infer from user message if possible and call save_profile_field. "
+                "Otherwise ask for at most one.]"
+            )
+            history[-1]["content"] = history[-1]["content"] + "\n\n" + note
+            mem_session.asked_this_session.update(unasked)
+
         registry = ToolRegistry()
+        registry.register(
+            "save_profile_field",
+            save_profile_field_handler,
+            SAVE_PROFILE_FIELD_SCHEMA,
+        )
 
         try:
             client = get_client()

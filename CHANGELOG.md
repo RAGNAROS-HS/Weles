@@ -51,8 +51,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Profile + preferences injected as Block 3 of every Claude request; block regenerated fresh on each message (#8)
 - Token warning logged when profile block exceeds 500 tokens (#8)
 - Settings page with human-readable decay threshold labels, Save button, and permanent-delete confirmation modal (#10)
+- `check_missing_fields(mode, profile)` in `agent/context.py`; returns null profile fields relevant to current mode (#11)
+- `save_profile_field` Claude tool in `tools/profile_tools.py`; registered in `ToolRegistry` on every request (#11)
+- Missing profile fields injected as `[System: ...]` note into user turn before each Claude request; each field asked at most once per session (#11)
 
-<!-- Issues #9, #11–12 -->
+<!-- Issues #9, #12 -->
 
 ### v0.3 — Research Engine
 <!-- Issues #13–18 -->
