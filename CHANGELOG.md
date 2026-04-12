@@ -63,7 +63,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `GET /history?domain=&status=` and `DELETE /history/{id}` endpoints (previously stub, now fully wired) (#12)
 - History page in frontend: filterable table by domain and status, per-row delete button (#12)
 
-<!-- Issue #9 -->
+- Information page: profile fields (inline edit, decay indicator, last-updated date), learned preferences (delete), history summary by domain and status (#9)
+- `GET /preferences` endpoint to list all learned preferences (#9)
 
 ### v0.3 — Research Engine
 

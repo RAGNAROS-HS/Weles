@@ -32,6 +32,39 @@ export interface ChatMessage {
   streaming?: boolean
 }
 
+export interface UserProfile {
+  id: number | null
+  height_cm: number | null
+  weight_kg: number | null
+  build: string | null
+  fitness_level: string | null
+  injury_history: string | null
+  dietary_restrictions: string | null
+  dietary_preferences: string | null
+  dietary_approach: string | null
+  aesthetic_style: string | null
+  brand_rejections: string | null
+  climate: string | null
+  activity_level: string | null
+  living_situation: string | null
+  country: string | null
+  budget_psychology: string | null
+  fitness_goal: string | null
+  dietary_goal: string | null
+  lifestyle_focus: string | null
+  first_session_at: string | null
+  field_timestamps: string | null
+}
+
+export interface Preference {
+  id: string
+  dimension: string
+  value: string
+  reason: string | null
+  source: string
+  created_at: string | null
+}
+
 export interface HistoryItem {
   id: string
   item_name: string

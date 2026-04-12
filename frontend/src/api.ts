@@ -1,4 +1,4 @@
-import type { Mode, Session } from './types'
+import type { HistoryItem, Mode, Preference, Session, UserProfile } from './types'
 
 export async function createSession(): Promise<Session> {
   const r = await fetch('/sessions', { method: 'POST' })
@@ -37,6 +37,29 @@ export async function patchSettings(patch: Record<string, unknown>): Promise<Rec
   return r.json()
 }
 
+export async function getProfile(): Promise<UserProfile> {
+  const r = await fetch('/profile')
+  return r.json()
+}
+
+export async function patchProfile(patch: Record<string, unknown>): Promise<UserProfile> {
+  const r = await fetch('/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
+  return r.json()
+}
+
+export async function listPreferences(): Promise<Preference[]> {
+  const r = await fetch('/preferences')
+  return r.json()
+}
+
+export async function deletePreference(id: string): Promise<void> {
+  await fetch(`/preferences/${id}`, { method: 'DELETE' })
+}
+
 export async function clearData(): Promise<void> {
   const r = await fetch('/data', { method: 'DELETE' })
   if (!r.ok) throw new Error(`DELETE /data failed: ${r.status}`)
@@ -55,4 +78,4 @@ export async function deleteHistoryItem(id: string): Promise<void> {
   await fetch(`/history/${id}`, { method: 'DELETE' })
 }
 
-export type { HistoryItem } from './types'
+export type { HistoryItem, Preference, UserProfile } from './types'
