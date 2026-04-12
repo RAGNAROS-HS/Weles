@@ -4,3 +4,11 @@ class ConfigurationError(Exception):
 
 class ToolNotFoundError(Exception):
     pass
+
+
+class RedditUnavailableError(Exception):
+    pass
+
+
+class MaxToolCallsError(Exception):
+    pass

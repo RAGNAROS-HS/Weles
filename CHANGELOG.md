@@ -74,7 +74,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Human-readable `ToolStartEvent.description` per tool: `search_reddit`, `search_web`, `add_to_history`, `save_profile_field`, and a generic fallback (#13)
 - Tool exceptions caught in the loop and emitted as `ToolErrorEvent`; Claude instructed to continue with available data (#13)
 
-<!-- Issues #14–18 -->
+- `search_reddit` Claude tool: searches Reddit via public JSON API; no credentials required; supports per-subreddit scoping, deduplication, and top-3 comments (#14)
+- Rate limiting: `asyncio.Semaphore(1)` + 1 s sleep after every request; 429 backoff using `Retry-After`; 3 retries before `RedditUnavailableError` (#14)
+- Posts with score < 5 excluded; results sorted by score descending (#14)
+- `max_tool_calls_per_turn` enforced in `ToolRegistry`: reads from settings (default 6); 7th call in a turn raises `MaxToolCallsError` → `ToolErrorEvent` (#14)
+
+<!-- Issues #15–18 -->
 
 ### v0.4 — Domain Modules
 <!-- Issues #19–22 -->
