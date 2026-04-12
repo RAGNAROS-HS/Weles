@@ -6,6 +6,11 @@ from weles.utils.paths import resource_path
 _VALID_MODES = {"general", "shopping", "diet", "fitness", "lifestyle"}
 
 
+def _build_profile_block_stub(profile: UserProfile) -> str:
+    """Stub until #8 implements profile context injection. Always returns ''."""
+    return ""
+
+
 def build_system_prompt(
     mode: str,
     profile: UserProfile | None = None,
@@ -25,8 +30,11 @@ def build_system_prompt(
         mode_text = resource_path(f"src/weles/prompts/modes/{mode}.md").read_text(encoding="utf-8")
         blocks.append({"type": "text", "text": mode_text})
 
-    # Block 3: profile context (stub until #8; added only when profile is non-empty)
+    # Block 3: profile context — stub until #8; _build_profile_block returns ""
+    # so the block is skipped until the real implementation lands
     if profile is not None and not profile_is_empty(profile):
-        blocks.append({"type": "text", "text": ""})
+        profile_text = _build_profile_block_stub(profile)
+        if profile_text:
+            blocks.append({"type": "text", "text": profile_text})
 
     return blocks
