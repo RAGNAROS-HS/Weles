@@ -6,8 +6,12 @@ from pytest_mock import MockerFixture
 from weles.utils.errors import ConfigurationError
 
 
-async def test_startup_raises_without_anthropic_key(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_startup_raises_without_anthropic_key(
+    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
+) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    mocker.patch("weles.api.startup.load_dotenv")  # prevent .env from restoring the key
     from weles.api.startup import startup
 
     state = types.SimpleNamespace()
@@ -25,6 +29,7 @@ async def test_startup_web_search_false_without_tavily(
 
     mock_conn = mocker.MagicMock()
     mock_conn.execute.return_value.fetchone.side_effect = [(4,), None]
+    mocker.patch("weles.api.startup.load_dotenv")  # prevent .env from restoring keys
     mocker.patch("weles.api.startup.get_db", return_value=mock_conn)
     mocker.patch("weles.api.startup.check_port_free")
     mocker.patch("alembic.command.upgrade")
