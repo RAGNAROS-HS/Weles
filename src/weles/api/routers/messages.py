@@ -143,7 +143,7 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
 
         try:
             async for event in stream_response(
-                client, history, registry.get_tool_schemas(), system
+                client, history, registry.get_tool_schemas(), system, registry
             ):
                 sse = _agent_event_to_sse(event, title, session_id)
                 if sse:
@@ -168,12 +168,12 @@ def _agent_event_to_sse(event: AgentEvent, title: str, session_id: str) -> dict[
     if isinstance(event, ToolStartEvent):
         return {
             "event": "tool_start",
-            "data": json.dumps({"tool": event.tool, "description": event.tool_use_id}),
+            "data": json.dumps({"tool": event.tool, "description": event.description}),
         }
     if isinstance(event, ToolEndEvent):
         return {
             "event": "tool_end",
-            "data": json.dumps({"tool": event.tool, "result_summary": event.result}),
+            "data": json.dumps({"tool": event.tool, "result_summary": event.result_summary}),
         }
     if isinstance(event, ToolErrorEvent):
         return {

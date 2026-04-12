@@ -58,7 +58,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Issues #9, #12 -->
 
 ### v0.3 — Research Engine
-<!-- Issues #13–18 -->
+
+#### Added
+- `ToolResult(summary, data)` named tuple returned by `ToolRegistry.dispatch()`; `summary` drives `tool_end` SSE, `data` is sent to Claude (#13)
+- Agentic tool-use loop in `stream_response`: streams text deltas, then processes `tool_use` blocks, emits `ToolStartEvent`/`ToolEndEvent`/`ToolErrorEvent`, and continues until `end_turn` (#13)
+- Human-readable `ToolStartEvent.description` per tool: `search_reddit`, `search_web`, `add_to_history`, `save_profile_field`, and a generic fallback (#13)
+- Tool exceptions caught in the loop and emitted as `ToolErrorEvent`; Claude instructed to continue with available data (#13)
+
+<!-- Issues #14–18 -->
 
 ### v0.4 — Domain Modules
 <!-- Issues #19–22 -->

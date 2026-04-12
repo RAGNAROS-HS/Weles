@@ -7,7 +7,9 @@ from weles.utils.errors import ToolNotFoundError
 def test_register_and_dispatch_calls_handler():
     registry = ToolRegistry()
     registry.register("my_tool", lambda inp: "result", {"type": "object", "properties": {}})
-    assert registry.dispatch("my_tool", {}) == "result"
+    result = registry.dispatch("my_tool", {})
+    assert result.summary == "result"
+    assert result.data == "result"
 
 
 def test_dispatch_unknown_tool_raises():
