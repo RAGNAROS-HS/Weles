@@ -93,7 +93,7 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
         history = _load_history(session_id)
         session_row = _get_session(session_id)
         mode = session_row.get("mode", "general")
-        system = build_system_prompt(mode)
+        system = build_system_prompt(mode, None, [])
         registry = ToolRegistry()
 
         try:
