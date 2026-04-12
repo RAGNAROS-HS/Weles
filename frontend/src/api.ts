@@ -41,3 +41,18 @@ export async function clearData(): Promise<void> {
   const r = await fetch('/data', { method: 'DELETE' })
   if (!r.ok) throw new Error(`DELETE /data failed: ${r.status}`)
 }
+
+export async function listHistory(domain?: string, status?: string): Promise<HistoryItem[]> {
+  const params = new URLSearchParams()
+  if (domain) params.set('domain', domain)
+  if (status) params.set('status', status)
+  const query = params.toString()
+  const r = await fetch(`/history${query ? `?${query}` : ''}`)
+  return r.json()
+}
+
+export async function deleteHistoryItem(id: string): Promise<void> {
+  await fetch(`/history/${id}`, { method: 'DELETE' })
+}
+
+export type { HistoryItem } from './types'

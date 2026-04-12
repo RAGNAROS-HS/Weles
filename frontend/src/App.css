@@ -227,3 +227,29 @@ body {
 .confirm-modal button { background: #2a2a2a; border: 1px solid #3a3a3a; color: #e8e8e8; border-radius: 5px; padding: 6px 14px; cursor: pointer; font-size: 13px; align-self: flex-start; }
 .confirm-modal button:first-of-type { background: #5a2020; border-color: #6a2525; }
 .cleared-notice { color: #6a9; font-size: 13px; margin-bottom: 8px; }
+
+/* ── History page ── */
+.history-page { max-width: 900px; margin: 40px auto; padding: 0 24px; }
+.history-page h1 { margin-bottom: 24px; }
+.history-filters { display: flex; gap: 16px; margin-bottom: 20px; }
+.history-filters label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.history-filters select {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #e8e8e8;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.history-empty { color: #666; font-size: 14px; }
+.history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.history-table th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid #2e2e2e;
+  color: #888;
+  font-weight: 500;
+}
+.history-table td { padding: 8px 10px; border-bottom: 1px solid #1e1e1e; color: #ccc; }
+.history-table tr:hover td { background: #161616; }
+.history-notes { color: #666; cursor: default; }

@@ -31,3 +31,16 @@ export interface ChatMessage {
   content: string
   streaming?: boolean
 }
+
+export interface HistoryItem {
+  id: string
+  item_name: string
+  category: string
+  domain: string
+  status: string
+  rating: number | null
+  notes: string | null
+  follow_up_due_at: string | null
+  check_in_due_at: string | null
+  created_at: string
+}

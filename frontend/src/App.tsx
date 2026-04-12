@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { clearData, createSession, deleteSession, getSettings, listSessions, patchSession, patchSettings } from './api'
-import type { ChatMessage, Mode, Session, ToolProgress } from './types'
+import { clearData, createSession, deleteHistoryItem, deleteSession, getSettings, listHistory, listSessions, patchSession, patchSettings } from './api'
+import type { ChatMessage, HistoryItem, Mode, Session, ToolProgress } from './types'
 import './App.css'
 
 const MODES: Mode[] = ['general', 'shopping', 'diet', 'fitness', 'lifestyle']
@@ -127,6 +127,78 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
   )
 }
 
+// ── History page ─────────────────────────────────────────────────────────
+
+const DOMAINS = ['', 'shopping', 'diet', 'fitness', 'lifestyle']
+const STATUSES = ['', 'recommended', 'bought', 'tried', 'rated', 'skipped']
+
+function HistoryPage({ onBack }: { onBack: () => void }) {
+  const [items, setItems] = useState<HistoryItem[]>([])
+  const [domain, setDomain] = useState('')
+  const [status, setStatus] = useState('')
+
+  useEffect(() => {
+    listHistory(domain || undefined, status || undefined).then(setItems)
+  }, [domain, status])
+
+  async function handleDelete(id: string) {
+    await deleteHistoryItem(id)
+    setItems(prev => prev.filter(i => i.id !== id))
+  }
+
+  return (
+    <div className="history-page">
+      <button className="back-btn" onClick={onBack}>← Back</button>
+      <h1>History</h1>
+      <div className="history-filters">
+        <label>
+          Domain
+          <select value={domain} onChange={e => setDomain(e.target.value)}>
+            {DOMAINS.map(d => <option key={d} value={d}>{d || 'All'}</option>)}
+          </select>
+        </label>
+        <label>
+          Status
+          <select value={status} onChange={e => setStatus(e.target.value)}>
+            {STATUSES.map(s => <option key={s} value={s}>{s || 'All'}</option>)}
+          </select>
+        </label>
+      </div>
+      {items.length === 0
+        ? <p className="history-empty">No items found.</p>
+        : (
+          <table className="history-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Domain</th>
+                <th>Status</th>
+                <th>Rating</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(item => (
+                <tr key={item.id}>
+                  <td>{item.item_name}{item.notes ? <span className="history-notes" title={item.notes}> *</span> : null}</td>
+                  <td>{item.category}</td>
+                  <td>{item.domain}</td>
+                  <td>{item.status}</td>
+                  <td>{item.rating != null ? `${item.rating}/5` : '—'}</td>
+                  <td>{item.created_at.slice(0, 10)}</td>
+                  <td><button className="del-btn" onClick={() => handleDelete(item.id)}>×</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      }
+    </div>
+  )
+}
+
 // ── Chat page ────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -137,7 +209,7 @@ export default function App() {
   const [streaming, setStreaming] = useState(false)
   const [toolProgress, setToolProgress] = useState<ToolProgress[]>([])
   const [toolsExpanded, setToolsExpanded] = useState(false)
-  const [page, setPage] = useState<'chat' | 'settings' | 'info'>('chat')
+  const [page, setPage] = useState<'chat' | 'settings' | 'info' | 'history'>('chat')
   const [mode, setMode] = useState<Mode>('general')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -291,6 +363,10 @@ export default function App() {
     return <SettingsPage onBack={() => setPage('chat')} />
   }
 
+  if (page === 'history') {
+    return <HistoryPage onBack={() => setPage('chat')} />
+  }
+
   return (
     <div className="layout">
       {/* Sidebar */}
@@ -310,6 +386,7 @@ export default function App() {
         </nav>
         <div className="sidebar-links">
           <button onClick={() => setPage('info')}>Information</button>
+          <button onClick={() => setPage('history')}>History</button>
           <button onClick={() => setPage('settings')}>Settings</button>
         </div>
       </aside>
