@@ -38,5 +38,6 @@ export async function patchSettings(patch: Record<string, unknown>): Promise<Rec
 }
 
 export async function clearData(): Promise<void> {
-  await fetch('/data', { method: 'DELETE' })
+  const r = await fetch('/data', { method: 'DELETE' })
+  if (!r.ok) throw new Error(`DELETE /data failed: ${r.status}`)
 }
