@@ -35,7 +35,7 @@ async def test_successful_response_parsed_into_web_results(httpx_mock: HTTPXMock
     results = await search_web("best headphones")
 
     assert len(results) == 2
-    assert results[0]["title"] in ("Post One", "Post Two")
+    assert {r["title"] for r in results} == {"Post One", "Post Two"}
     for r in results:
         assert "title" in r
         assert "url" in r

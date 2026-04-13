@@ -74,6 +74,7 @@ async def startup(state: Any) -> None:
     from alembic.config import Config
 
     cfg = Config(str(resource_path("alembic.ini")))
+    cfg.set_main_option("script_location", str(resource_path("alembic")))
     command.upgrade(cfg, "head")
 
     # 5. Seed default settings if table is empty
@@ -83,7 +84,10 @@ async def startup(state: Any) -> None:
         conn.executemany("INSERT INTO settings (key, value) VALUES (?, ?)", _DEFAULT_SETTINGS)
         conn.commit()
 
-    # 6. Check TAVILY_API_KEY
+    # 6. Check TAVILY_API_KEY; preload domain sets regardless so missing files surface early
+    from weles.tools.web import preload_domain_sets
+
+    preload_domain_sets()
     if os.getenv("TAVILY_API_KEY"):
         state.web_search_available = True
     else:

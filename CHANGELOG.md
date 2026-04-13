@@ -80,14 +80,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `max_tool_calls_per_turn` enforced in `ToolRegistry`: reads from settings (default 6); 7th call in a turn raises `MaxToolCallsError` → `ToolErrorEvent` (#14)
 - LangSmith tracing: Anthropic client wrapped with `wrap_anthropic`; `stream_response` decorated with `@traceable(run_type="chain")`; `ToolRegistry.adispatch` decorated with `@traceable(run_type="tool")`
 - `LANGSMITH_ENDPOINT`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, `LANGSMITH_TRACING` added to `.env.example`; tracing is a no-op when `LANGSMITH_TRACING` is absent or false
+- `search_web` Claude tool: searches the open web via Tavily API; returns `WebResult` objects classified by domain as `community`, `commercial`, or `unknown`; results sorted community-first (#16)
+- Domain lists (`community_domains.txt`, `commercial_domains.txt`) preloaded at startup via `resource_path`; cached in module-level sets (#16)
+- `search_web` registered in `ToolRegistry` only when `TAVILY_API_KEY` is set; absent key → tool not registered, no crash (#16)
 
 ### Fixed
 - Reddit requests returning 403: switched `User-Agent` from `Weles/0.1` to a Chrome browser string; added `Accept` and `Accept-Language` headers
 - `GeneratorExit` error logged in LangSmith traces: removed early `break` on `DoneEvent` in the SSE router so `stream_response` exhausts naturally instead of being closed mid-flight
-
-- `search_web` Claude tool: searches the open web via Tavily API; returns `WebResult` objects classified by domain as `community`, `commercial`, or `unknown`; results sorted community-first (#16)
-- Domain classification loaded at startup from `blocklist/community_domains.txt` and `blocklist/commercial_domains.txt` via `resource_path`; cached in module-level sets (#16)
-- `search_web` registered in `ToolRegistry` only when `TAVILY_API_KEY` is set; absent key → tool not registered, no crash (#16)
 
 ### v0.4 — Domain Modules
 <!-- Issues #19–22 -->

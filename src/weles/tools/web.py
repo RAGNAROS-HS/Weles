@@ -40,8 +40,14 @@ def _get_commercial_domains() -> set[str]:
     return _commercial_domains
 
 
-def _classify_domain(domain: str) -> str:
-    domain = domain.lower().removeprefix("www.")
+def preload_domain_sets() -> None:
+    """Eagerly load domain sets at startup so missing files surface immediately."""
+    _get_community_domains()
+    _get_commercial_domains()
+
+
+def _classify_domain(netloc: str) -> str:
+    domain = netloc.lower().removeprefix("www.")
     if domain in _get_community_domains():
         return "community"
     if domain in _get_commercial_domains():
@@ -79,8 +85,9 @@ async def search_web(query: str, limit: int = 8) -> list[WebResult]:
     results: list[WebResult] = []
     for item in data.get("results", []):
         url = item.get("url", "")
-        domain = urlparse(url).netloc.lower().removeprefix("www.")
-        source_type = _classify_domain(domain)
+        netloc = urlparse(url).netloc
+        domain = netloc.lower().removeprefix("www.")
+        source_type = _classify_domain(netloc)
         results.append(
             WebResult(
                 title=item.get("title", ""),
@@ -91,7 +98,7 @@ async def search_web(query: str, limit: int = 8) -> list[WebResult]:
             )
         )
 
-    results.sort(key=lambda r: _SORT_ORDER[r["source_type"]])
+    results.sort(key=lambda r: _SORT_ORDER.get(r["source_type"], 1))
     return results
 
 
