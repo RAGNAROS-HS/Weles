@@ -29,6 +29,7 @@ from weles.db.settings_repo import get_setting
 from weles.tools.history_tools import ADD_TO_HISTORY_SCHEMA, add_to_history_handler
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
 from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
+from weles.tools.web import SEARCH_WEB_SCHEMA, search_web_handler
 from weles.utils.errors import ConfigurationError
 
 _MODE_TO_DOMAIN = {
@@ -160,6 +161,12 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             search_reddit_handler,
             SEARCH_REDDIT_SCHEMA,
         )
+        if request.app.state.web_search_available:
+            registry.register(
+                "search_web",
+                search_web_handler,
+                SEARCH_WEB_SCHEMA,
+            )
 
         try:
             client = get_client()

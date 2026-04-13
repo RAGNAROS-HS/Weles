@@ -85,7 +85,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Reddit requests returning 403: switched `User-Agent` from `Weles/0.1` to a Chrome browser string; added `Accept` and `Accept-Language` headers
 - `GeneratorExit` error logged in LangSmith traces: removed early `break` on `DoneEvent` in the SSE router so `stream_response` exhausts naturally instead of being closed mid-flight
 
-<!-- Issues #15–18 -->
+- `search_web` Claude tool: searches the open web via Tavily API; returns `WebResult` objects classified by domain as `community`, `commercial`, or `unknown`; results sorted community-first (#16)
+- Domain classification loaded at startup from `blocklist/community_domains.txt` and `blocklist/commercial_domains.txt` via `resource_path`; cached in module-level sets (#16)
+- `search_web` registered in `ToolRegistry` only when `TAVILY_API_KEY` is set; absent key → tool not registered, no crash (#16)
 
 ### v0.4 — Domain Modules
 <!-- Issues #19–22 -->
