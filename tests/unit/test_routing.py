@@ -1,4 +1,4 @@
-from weles.research.routing import get_subreddits
+from weles.research.routing import get_subcategories, get_subreddits
 
 
 def test_shopping_footwear():
@@ -24,3 +24,12 @@ def test_fitness_running():
 
 def test_valid_mode_no_subcategory_returns_general():
     assert get_subreddits("diet", None) == ["nutrition", "EatCheapAndHealthy", "MealPrepSunday"]
+
+
+def test_get_subcategories_returns_non_general_keys():
+    cats = get_subcategories("shopping")
+    assert set(cats) == {"footwear", "electronics", "kitchen"}
+
+
+def test_get_subcategories_unknown_mode_returns_empty():
+    assert get_subcategories("nonexistent_mode") == []

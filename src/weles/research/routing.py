@@ -15,6 +15,15 @@ def _load() -> dict[str, Any]:
     return _subreddits
 
 
+def get_subcategories(mode: str) -> list[str]:
+    """Return non-general subcategory names available for the given mode."""
+    data = _load()
+    mode_data = data.get(mode)
+    if mode_data is None:
+        return []
+    return [k for k in mode_data if k != "general"]
+
+
 def get_subreddits(mode: str, subcategory: str | None) -> list[str]:
     """Return subreddits for the given mode and optional subcategory.
 

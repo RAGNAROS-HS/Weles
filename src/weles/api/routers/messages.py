@@ -1,6 +1,6 @@
 import json
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
 from typing import Any
 
@@ -26,11 +26,26 @@ from weles.db.connection import get_db
 from weles.db.history_repo import get_history_context
 from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
 from weles.db.settings_repo import get_setting
-from weles.research.routing import get_subreddits
+from weles.research.routing import get_subcategories, get_subreddits
 from weles.tools.history_tools import ADD_TO_HISTORY_SCHEMA, add_to_history_handler
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
 from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
 from weles.utils.errors import ConfigurationError
+
+
+def make_search_reddit_handler(
+    mode: str,
+) -> "Callable[[dict[str, Any]], Awaitable[object]]":
+    """Return a search_reddit handler that resolves subcategory → subreddits for the given mode."""
+
+    async def handler(tool_input: dict[str, Any]) -> object:
+        if not tool_input.get("subreddits"):
+            subcategory = tool_input.get("subcategory") or None
+            tool_input = {**tool_input, "subreddits": get_subreddits(mode, subcategory)}
+        return await search_reddit_handler(tool_input)
+
+    return handler
+
 
 _MODE_TO_DOMAIN = {
     "shopping": "shopping",
@@ -124,6 +139,17 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             yield {"event": "error", "data": json.dumps({"message": str(exc)})}
             return
 
+        if mode != "general":
+            subcategories = get_subcategories(mode)
+            if subcategories:
+                cats = ", ".join(subcategories)
+                system = system + [
+                    {
+                        "type": "text",
+                        "text": f"Available search subcategories for {mode} mode: {cats}.",
+                    }
+                ]
+
         # Inject missing-field note into the user turn
         mem_session = _get_or_create_session(session_id)
         missing = check_missing_fields(mode, profile)
@@ -156,19 +182,9 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             add_to_history_handler,
             ADD_TO_HISTORY_SCHEMA,
         )
-        default_subreddits = get_subreddits(mode, None) if mode != "general" else None
-
-        async def _search_reddit_handler(
-            tool_input: dict[str, Any],
-            _defaults: list[str] | None = default_subreddits,
-        ) -> object:
-            if not tool_input.get("subreddits") and _defaults:
-                tool_input = {**tool_input, "subreddits": _defaults}
-            return await search_reddit_handler(tool_input)
-
         registry.register(
             "search_reddit",
-            _search_reddit_handler,
+            make_search_reddit_handler(mode),
             SEARCH_REDDIT_SCHEMA,
         )
 
