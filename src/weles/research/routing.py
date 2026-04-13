@@ -3,12 +3,12 @@ from typing import Any
 
 from weles.utils.paths import resource_path
 
-_subreddits: dict[str, Any] = {}
+_subreddits: dict[str, Any] | None = None
 
 
 def _load() -> dict[str, Any]:
     global _subreddits
-    if not _subreddits:
+    if _subreddits is None:
         path = resource_path("config/subreddits.toml")
         with open(path, "rb") as f:
             _subreddits = tomllib.load(f)

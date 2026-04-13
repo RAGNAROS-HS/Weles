@@ -20,3 +20,7 @@ def test_nonexistent_mode_returns_fallback():
 
 def test_fitness_running():
     assert get_subreddits("fitness", "running") == ["running", "trailrunning", "BuyItForLife"]
+
+
+def test_valid_mode_no_subcategory_returns_general():
+    assert get_subreddits("diet", None) == ["nutrition", "EatCheapAndHealthy", "MealPrepSunday"]

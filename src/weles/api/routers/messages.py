@@ -26,6 +26,7 @@ from weles.db.connection import get_db
 from weles.db.history_repo import get_history_context
 from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
 from weles.db.settings_repo import get_setting
+from weles.research.routing import get_subreddits
 from weles.tools.history_tools import ADD_TO_HISTORY_SCHEMA, add_to_history_handler
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
 from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
@@ -155,9 +156,19 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             add_to_history_handler,
             ADD_TO_HISTORY_SCHEMA,
         )
+        default_subreddits = get_subreddits(mode, None) if mode != "general" else None
+
+        async def _search_reddit_handler(
+            tool_input: dict[str, Any],
+            _defaults: list[str] | None = default_subreddits,
+        ) -> object:
+            if not tool_input.get("subreddits") and _defaults:
+                tool_input = {**tool_input, "subreddits": _defaults}
+            return await search_reddit_handler(tool_input)
+
         registry.register(
             "search_reddit",
-            search_reddit_handler,
+            _search_reddit_handler,
             SEARCH_REDDIT_SCHEMA,
         )
 
