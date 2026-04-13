@@ -159,10 +159,18 @@ SEARCH_REDDIT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "query": {"type": "string", "description": "Search query."},
+        "subcategory": {
+            "type": "string",
+            "description": (
+                "Subcategory hint for subreddit routing (e.g. 'footwear', 'running'). "
+                "The server resolves this to the appropriate subreddits. "
+                "Ignored if subreddits are explicitly provided."
+            ),
+        },
         "subreddits": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Optional subreddits to scope the search.",
+            "description": "Explicit subreddits to scope the search. Overrides subcategory.",
         },
         "limit": {
             "type": "integer",

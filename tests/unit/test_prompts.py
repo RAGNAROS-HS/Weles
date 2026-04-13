@@ -13,6 +13,7 @@ def test_shopping_mode_returns_two_blocks() -> None:
     blocks = build_system_prompt("shopping", None, [])
     assert len(blocks) == 2
     assert "Shopping mode" in blocks[1]["text"]
+    assert "subcategory" in blocks[1]["text"]
 
 
 def test_unknown_mode_raises_value_error() -> None:
