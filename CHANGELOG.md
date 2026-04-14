@@ -119,6 +119,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `maybe_compress_context(session_id, client, session)` in `agent/compression.py`: when `estimated_tokens > 0.8 × CONTEXT_WINDOW`, summarises the oldest 25% of user+assistant pairs; the last 10 messages are never touched; updates DB and in-memory session (#23)
 - Context compression triggered as a background task after every SSE turn in `api/routers/messages.py` (#23)
 
+#### Added
+- `run_session_start_checks(db)` in `api/session_start.py`: orchestrates all session-start checks in order — passive pattern detection, decay, follow-up, check-in; returns `SessionStartResult{prompt, notices}`; at most one user-facing prompt (#24)
+- Passive pattern detection writes `preferences` row with `source="agent_inferred"` when ≥3 history items are skipped in the same domain+category (#24)
+
+#### Changed
+- `POST /sessions` returns `session_start_prompt: {prompt, notices}` from the orchestrator instead of a static `null` (#24)
+
 #### Fixed
 - `tool_result` blocks now appear before `text` blocks in user messages following a tool-use turn; previous ordering caused `BadRequestError` from the Anthropic API (#23)
 

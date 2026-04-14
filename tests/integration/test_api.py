@@ -6,7 +6,7 @@ def test_post_sessions_returns_201(client):
     assert body["title"] is None
     assert body["mode"] == "general"
     assert "created_at" in body
-    assert body["session_start_prompt"] is None
+    assert body["session_start_prompt"] == {"prompt": None, "notices": []}
 
 
 def test_get_sessions_empty_on_fresh_db(client):
