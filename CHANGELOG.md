@@ -145,6 +145,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `research.md` updated with explicit confidence calibration: responses must open with `[strong consensus]`, `[divided community]`, or `[thin data]`; each label defined with criteria (#29)
 - `[thin data]` format specified; minority opinion, data age, and discontinued product flags required (#29)
 - `scripts/eval_confidence.py`: runs 5 scenario queries for manual confidence label review; not a CI gate (#29)
+- `score_results` extended: tags `affiliate: True` on web results with affiliate URLs; geo-block filter tags `available: False` when domain is in `config/geo_blocks/{COUNTRY}.txt` and user country matches (#30)
+- Coordinated positivity detection extended: also fires when ≥3 low/flagged results all contain a shared astroturfing phrase (e.g. "exceeded my expectations") (#30)
+- `search_web_handler` and `search_reddit_handler` now call `score_results`; all credibility metadata present in results passed to Claude (#30)
 
 ### v1.0 — Distribution
 <!-- Issue #32 -->

@@ -2,7 +2,7 @@
 
 When calling `search_reddit`, pass the most specific subcategory that matches the user's query using the `subcategory` parameter — the server resolves it to the right subreddits. Available subcategories for the current mode are listed in your system context. If none fits, omit `subcategory` and the general list for this mode is used. If the user explicitly names a subreddit, pass it via `subreddits` instead.
 
-When interpreting search results, each result carries a `credibility` field (`high`, `medium`, `low`, or `flagged`).
+Search results are returned as `{"results": [...], "batch_flag": ...}`. Each item in `results` carries a `credibility` field (`high`, `medium`, `low`, or `flagged`). Web results may also carry `affiliate: true` (URL is commission-linked) and `available: false` (retailer does not ship to the user's country — exclude from synthesis).
 
 - Heavily discount `low` and `flagged` results. Treat them as weak signal only — do not base recommendations primarily on them.
 - If the result set includes `"batch_flag": "coordinated_positivity"`, mention the possibility of astroturfing or coordinated promotion to the user.

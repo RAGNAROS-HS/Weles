@@ -1,1 +1,7 @@
-# Poland domain blocklist — populated in later issues
+# Poland geo-block list — retailers not shipping to Poland
+# Add domain names only (no protocol, no www prefix)
+mediaexpert.pl
+morele.net
+oleole.pl
+bestbuy.com
+newegg.com
