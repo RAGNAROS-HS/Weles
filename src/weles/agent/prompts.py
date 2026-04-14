@@ -1,8 +1,26 @@
+import tomllib
 from typing import Any
 
 from weles.profile.context import build_profile_block
 from weles.profile.models import Preference, UserProfile
 from weles.utils.paths import resource_path
+
+
+def _load_programs_text() -> str:
+    path = resource_path("config/programs.toml")
+    with open(path, "rb") as f:
+        data = tomllib.load(f)
+    programs = data.get("programs", [])
+    lines = ["Community-vetted programs:"]
+    for p in programs:
+        line = (
+            f"- {p['name']} | level: {p['level']} | goal: {p['goal']} | equipment: {p['equipment']}"
+        )
+        if p.get("source"):
+            line += f" | source: {p['source']}"
+        lines.append(line)
+    return "\n".join(lines)
+
 
 _VALID_MODES = {"general", "shopping", "diet", "fitness", "lifestyle"}
 
@@ -33,6 +51,14 @@ def build_system_prompt(
                 "Discard research results that include them."
             )
             combined = combined + "\n\n" + constraint
+        if mode == "fitness":
+            combined = combined + "\n\n" + _load_programs_text()
+            if profile and profile.injury_history:
+                combined = (
+                    combined
+                    + "\n\nFlag if any recommended program includes movements that may"
+                    + f" conflict with: {profile.injury_history}."
+                )
         blocks.append({"type": "text", "text": combined + "\n\n" + research_text})
 
     # Block 3: profile context (omitted when profile is empty and no preferences)
