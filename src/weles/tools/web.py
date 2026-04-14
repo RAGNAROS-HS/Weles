@@ -7,6 +7,17 @@ import httpx
 from weles.agent.dispatch import ToolResult
 from weles.utils.paths import resource_path
 
+
+def _get_user_country() -> str | None:
+    """Return the user's country from the profile, or None."""
+    try:
+        from weles.db.profile_repo import get_profile
+
+        return get_profile().country
+    except Exception:
+        return None
+
+
 _TAVILY_URL = "https://api.tavily.com/search"
 
 _community_domains: set[str] | None = None
@@ -117,13 +128,17 @@ SEARCH_WEB_SCHEMA: dict[str, Any] = {
 
 
 async def search_web_handler(tool_input: dict[str, Any]) -> ToolResult:
+    from weles.research.credibility import score_results
+
     results = await search_web(
         query=tool_input["query"],
         limit=tool_input.get("limit", 8),
     )
     if not results:
         return ToolResult(summary="No results found.", data=[])
+    country = _get_user_country()
+    scored = score_results(results, country_code=country)
     return ToolResult(
-        summary=f"Found {len(results)} results",
-        data=results,
+        summary=f"Found {len(scored['results'])} results",
+        data=scored,
     )
