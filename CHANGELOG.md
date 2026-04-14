@@ -88,6 +88,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Web scoring: community domains → `high`, commercial → `low`, unknown → `medium`; affiliate URL patterns (`?ref=`, `/go/`, etc.) → `flagged` regardless of source type (#17)
 - `score_results()` batch function: appends `credibility` to each result; sets `batch_flag="coordinated_positivity"` when ≥ 3 low/flagged results share a 4-word n-gram (#17)
 - Research prompt updated: Claude instructed to discount `low`/`flagged` results and surface astroturfing warning when `coordinated_positivity` is set (#17)
+- Research synthesis guidelines in `research.md`: signal strength labels (`[strong consensus]` / `[divided community]` / `[thin data]`), dissenting views, age/discontinuation flags, no manufacturer language, reasoning over conclusions (#18)
+- Research guidelines injected into user turn as a text block on first `search_reddit` or `search_web` call; injected once per stream (#18)
+- Tool failure notice sent to Claude after each tool batch: lists failed tool names; Claude instructed to continue and state which sources were unavailable (#18)
+- `ToolErrorEvent(tool="max_tool_calls", error="Research limit reached")` emitted when limit exceeded; sentinel `"Research limit reached. Synthesise with what you have."` sent to Claude (#18)
+- `scripts/eval_research.py`: runs 5 representative queries against live Claude for manual synthesis quality review; not a CI test (#18)
 
 ### Fixed
 - Reddit requests returning 403: switched `User-Agent` from `Weles/0.1` to a Chrome browser string; added `Accept` and `Accept-Language` headers
