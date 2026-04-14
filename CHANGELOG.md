@@ -104,6 +104,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Shopping mode prompt (`prompts/modes/shopping.md`): sub-intent classification (category_research, product_lookup, comparative, buy_timing), tool-use sequence, response structures per intent, profile filters for budget_psychology / aesthetic_style / country (#19)
 - Diet mode prompt (`prompts/modes/diet.md`): sub-intent classification (meal_suggestion, approach_validation, supplement_guidance, recipe_sourcing), tool-use sequences, response structures per intent (#20)
 - Dietary restrictions hard constraint injected into diet mode system prompt when `dietary_restrictions` is set in profile; constraint instructs Claude to discard non-compliant research results (#20)
+- Fitness mode prompt (`prompts/modes/fitness.md`): sub-intent classification (program_recommendation, program_check_in, troubleshoot, gear_advice), tool-use sequences, response structures per intent (#21)
+- `config/programs.toml` populated with 6 community-vetted programs (5/3/1, GZCLP, Starting Strength, PHUL, C25K, Bodyweight Fitness RR) with level/goal/equipment/source metadata (#21)
+- `filter_programs(level, goal, equipment)` in `research/programs.py`; loaded via `resource_path` (#21)
+- Programs list and injury_history flag injected into fitness mode system prompt when profile fields are set (#21)
 
 ### v0.5 — Learning Loop
 <!-- Issues #23–28 -->
