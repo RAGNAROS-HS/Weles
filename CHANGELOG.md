@@ -126,6 +126,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `snooze_follow_up(item_id, cadence_days)` in `history_repo.py`; `snooze_follow_up` Claude tool registered in registry (#25)
 - `check_check_in(db) -> SessionStartPrompt | None` in `api/session_start.py`; queries oldest overdue bought/tried item; returns `check_in` prompt or `None` (#26)
 - `snooze_check_in(item_id, days=30)` in `history_repo.py`; `snooze_check_in` Claude tool registered in registry for "Remind me later" response (#26)
+- `update_preference(dimension, value, reason, source)` in `profile_repo.py`; upserts a preference row (#27)
+- `update_preference` Claude tool in `tools/profile_tools.py`; registered in `ToolRegistry`; source always `"user_explicit"` (#27)
+- System prompt instructs Claude to call `update_preference` immediately on user pushback (#27)
+- Passive pattern detection updated: dimension `{domain}.{category}`, value describes skipping pattern, delegates to `update_preference` (#27)
 
 #### Changed
 - `POST /sessions` returns `session_start_prompt: {prompt, notices}` from the orchestrator instead of a static `null` (#24)
