@@ -193,6 +193,8 @@ SEARCH_REDDIT_SCHEMA: dict[str, Any] = {
 
 
 async def search_reddit_handler(tool_input: dict[str, Any]) -> ToolResult:
+    from weles.research.credibility import score_results
+
     posts = await search_reddit(
         query=tool_input["query"],
         subreddits=tool_input.get("subreddits"),
@@ -202,8 +204,9 @@ async def search_reddit_handler(tool_input: dict[str, Any]) -> ToolResult:
     )
     if not posts:
         return ToolResult(summary="No posts found.", data=[])
+    scored = score_results(posts)
     top_score = posts[0]["score"]
     return ToolResult(
-        summary=f"Found {len(posts)} posts (top score: {top_score})",
-        data=posts,
+        summary=f"Found {len(scored['results'])} posts (top score: {top_score})",
+        data=scored,
     )
