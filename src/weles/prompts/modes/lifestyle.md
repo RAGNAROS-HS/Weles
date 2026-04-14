@@ -20,14 +20,14 @@ Classify the user's message into one of these intents without a separate API cal
 ## Tool-use sequence (product_ecosystem)
 
 1. Extract the owned item(s) from the message; cross-reference with the `[History — lifestyle]` context block if present.
-2. `search_reddit("{item} accessories OR pairs well long term", subreddits=["BuyItForLife"])` plus a relevant hobby community via `subcategory`.
+2. `search_reddit("{item} accessories OR pairs well long term", subcategory="{hobby_category}")` — the server resolves the subcategory to the appropriate subreddits (BuyItForLife is included automatically for lifestyle subcategories).
 3. If Reddit results < 3 relevant posts: `search_web("{item} pairs with site:{forum}")` targeting known hobbyist forums — the credibility pipeline will classify community vs. commercial.
 4. Flag all results older than 3 years in synthesis.
 5. Call `add_to_history(domain="lifestyle", status="recommended")` for each specifically recommended accessory.
 
 ## Tool-use sequence (maintenance_care)
 
-1. `search_reddit("{item} care OR maintenance OR long term", subreddits=["BuyItForLife"])` plus material-specific community via `subcategory`.
+1. `search_reddit("{item} care OR maintenance OR long term", subcategory="{material_category}")` — the server resolves the subcategory; BuyItForLife is included automatically for lifestyle subcategories.
 2. Surface community-sourced steps only. Manufacturer instructions are secondary confirmation, not primary guidance.
 3. Include failure cases: "Users who used X on Y material reported Z damage."
 4. Flag source age.
