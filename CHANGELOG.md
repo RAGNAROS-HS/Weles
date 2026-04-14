@@ -140,7 +140,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `tool_result` blocks now appear before `text` blocks in user messages following a tool-use turn; previous ordering caused `BadRequestError` from the Anthropic API (#23)
 
 ### v0.6 — Signal Quality
-<!-- Issues #29–31 -->
+
+#### Added
+- `research.md` updated with explicit confidence calibration: responses must open with `[strong consensus]`, `[divided community]`, or `[thin data]`; each label defined with criteria (#29)
+- `[thin data]` format specified; minority opinion, data age, and discontinued product flags required (#29)
+- `scripts/eval_confidence.py`: runs 5 scenario queries for manual confidence label review; not a CI gate (#29)
 
 ### v1.0 — Distribution
 <!-- Issue #32 -->
