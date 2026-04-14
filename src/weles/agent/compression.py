@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Any
 
@@ -22,59 +23,6 @@ def needs_compression(messages: list[dict[str, Any]]) -> bool:
     return estimated_tokens(messages) > int(0.8 * CONTEXT_WINDOW)
 
 
-async def compress_tool_results(
-    session_id: str,
-    client: anthropic.Anthropic,
-    turn_messages: list[dict[str, Any]],
-) -> None:
-    """Compress tool_result blocks in the given turn messages in-place (fire-and-forget).
-
-    Replaces each tool_result content with a 2-sentence Claude summary.
-    No DB write — tool results are ephemeral and not persisted.
-    """
-    model = os.environ.get("WELES_MODEL", "claude-sonnet-4-6")
-    for msg in turn_messages:
-        if msg.get("role") != "user":
-            continue
-        content = msg.get("content")
-        if not isinstance(content, list):
-            continue
-        new_blocks: list[dict[str, Any]] = []
-        changed = False
-        for block in content:
-            if not isinstance(block, dict) or block.get("type") != "tool_result":
-                new_blocks.append(block)
-                continue
-            raw = block.get("content", "")
-            if not raw:
-                new_blocks.append(block)
-                continue
-            try:
-                resp = client.messages.create(
-                    model=model,
-                    max_tokens=128,
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": (
-                                f"Tool result:\n{raw}\n\n"
-                                "Summarise what this tool result contributed "
-                                "to the response in 2 sentences."
-                            ),
-                        }
-                    ],
-                )
-                first = resp.content[0] if resp.content else None
-                summary = first.text if isinstance(first, TextBlock) else str(raw)
-                new_blocks.append({**block, "content": f"[Compressed] {summary}"})
-                changed = True
-            except Exception:
-                new_blocks.append(block)
-        if changed:
-            msg["content"] = new_blocks
-            msg["is_compressed"] = True
-
-
 async def maybe_compress_context(
     session_id: str,
     client: anthropic.Anthropic,
@@ -84,6 +32,7 @@ async def maybe_compress_context(
 
     Compresses in-memory session messages and updates the DB.
     The last _PROTECTED_TAIL messages are never touched.
+    Sync Claude API calls run in a thread pool executor to avoid blocking the event loop.
     """
     if not needs_compression(session.get_messages_for_context()):
         return
@@ -93,6 +42,7 @@ async def maybe_compress_context(
         return
 
     model = os.environ.get("WELES_MODEL", "claude-sonnet-4-6")
+    loop = asyncio.get_event_loop()
     conn = get_db()
 
     i = 0
@@ -102,22 +52,22 @@ async def maybe_compress_context(
         if u.get("role") == "user" and a.get("role") == "assistant":
             u_text = u["content"] if isinstance(u["content"], str) else str(u["content"])
             a_text = a["content"] if isinstance(a["content"], str) else str(a["content"])
-            try:
-                resp = client.messages.create(
+            prompt = (
+                f"User: {u_text}\nAssistant: {a_text}\n\n"
+                "Summarise this exchange in 2-3 sentences, "
+                "preserving recommendations, decisions, "
+                "and profile information revealed."
+            )
+
+            def _call(p: str = prompt) -> anthropic.types.Message:
+                return client.messages.create(
                     model=model,
                     max_tokens=256,
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": (
-                                f"User: {u_text}\nAssistant: {a_text}\n\n"
-                                "Summarise this exchange in 2-3 sentences, "
-                                "preserving recommendations, decisions, "
-                                "and profile information revealed."
-                            ),
-                        }
-                    ],
+                    messages=[{"role": "user", "content": p}],
                 )
+
+            try:
+                resp = await loop.run_in_executor(None, _call)
                 first = resp.content[0] if resp.content else None
                 summary = first.text if isinstance(first, TextBlock) else f"{u_text} / {a_text}"
             except Exception:
