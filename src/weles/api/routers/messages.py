@@ -29,7 +29,12 @@ from weles.db.history_repo import get_history_context
 from weles.db.profile_repo import get_preferences, get_profile, set_first_session_at
 from weles.db.settings_repo import get_setting
 from weles.research.routing import get_subcategories, get_subreddits
-from weles.tools.history_tools import ADD_TO_HISTORY_SCHEMA, add_to_history_handler
+from weles.tools.history_tools import (
+    ADD_TO_HISTORY_SCHEMA,
+    SNOOZE_FOLLOW_UP_SCHEMA,
+    add_to_history_handler,
+    snooze_follow_up_handler,
+)
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
 from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
 from weles.tools.web import SEARCH_WEB_SCHEMA, search_web_handler
@@ -198,6 +203,11 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             "add_to_history",
             add_to_history_handler,
             ADD_TO_HISTORY_SCHEMA,
+        )
+        registry.register(
+            "snooze_follow_up",
+            snooze_follow_up_handler,
+            SNOOZE_FOLLOW_UP_SCHEMA,
         )
         registry.register(
             "search_reddit",
