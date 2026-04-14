@@ -99,7 +99,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `GeneratorExit` error logged in LangSmith traces: removed early `break` on `DoneEvent` in the SSE router so `stream_response` exhausts naturally instead of being closed mid-flight
 
 ### v0.4 — Domain Modules
-<!-- Issues #19–22 -->
+
+#### Added
+- Shopping mode prompt (`prompts/modes/shopping.md`): sub-intent classification (category_research, product_lookup, comparative, buy_timing), tool-use sequence, response structures per intent, profile filters for budget_psychology / aesthetic_style / country (#19)
 
 ### v0.5 — Learning Loop
 <!-- Issues #23–28 -->
