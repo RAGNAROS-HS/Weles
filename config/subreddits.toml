@@ -19,6 +19,9 @@ subreddits = ["keto", "ketogains"]
 [diet.vegan]
 subreddits = ["veganfitness", "PlantBasedDiet"]
 
+[diet.supplements]
+subreddits = ["Supplements", "nutrition", "nootropics"]
+
 [fitness.general]
 subreddits = ["Fitness", "weightroom", "bodyweightfitness"]
 
