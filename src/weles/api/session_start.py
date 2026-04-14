@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import json
 import sqlite3
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
 from weles.db.connection import get_db
+from weles.db.profile_repo import update_preference
 from weles.db.settings_repo import get_setting
 
 # Maps profile field → decay_thresholds category key
@@ -63,25 +63,17 @@ def _step1_passive_patterns(conn: sqlite3.Connection) -> None:
         " WHERE status = 'skipped' GROUP BY domain, category HAVING COUNT(*) >= 3"
     ).fetchall()
     for row in rows:
-        dimension = f"skip/{row['domain']}/{row['category']}"
+        dimension = f"{row['domain']}.{row['category']}"
         existing = conn.execute(
             "SELECT id FROM preferences WHERE dimension = ?", (dimension,)
         ).fetchone()
         if existing:
             continue
-        conn.execute(
-            "INSERT INTO preferences (id, dimension, value, reason, source, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                str(uuid.uuid4()),
-                dimension,
-                "dislikes",
-                f"Skipped {row['cnt']} times in {row['category']}",
-                "agent_inferred",
-                datetime.utcnow(),
-            ),
+        update_preference(
+            dimension=dimension,
+            value=f"Consistently skips {row['category']} recommendations in {row['domain']}",
+            source="agent_inferred",
         )
-    conn.commit()
 
 
 def _step2_decay_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:

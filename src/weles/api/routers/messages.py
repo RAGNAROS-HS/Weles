@@ -37,7 +37,12 @@ from weles.tools.history_tools import (
     snooze_check_in_handler,
     snooze_follow_up_handler,
 )
-from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
+from weles.tools.profile_tools import (
+    SAVE_PROFILE_FIELD_SCHEMA,
+    UPDATE_PREFERENCE_SCHEMA,
+    save_profile_field_handler,
+    update_preference_handler,
+)
 from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
 from weles.tools.web import SEARCH_WEB_SCHEMA, search_web_handler
 from weles.utils.errors import ConfigurationError
@@ -200,6 +205,11 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             "save_profile_field",
             save_profile_field_handler,
             SAVE_PROFILE_FIELD_SCHEMA,
+        )
+        registry.register(
+            "update_preference",
+            update_preference_handler,
+            UPDATE_PREFERENCE_SCHEMA,
         )
         registry.register(
             "add_to_history",

@@ -122,10 +122,10 @@ def test_passive_detection_writes_preference(tmp_db) -> None:
     run_session_start_checks(conn)
 
     pref = conn.execute(
-        "SELECT * FROM preferences WHERE dimension = ?", ("skip/diet/keto_snacks",)
+        "SELECT * FROM preferences WHERE dimension = ?", ("diet.keto_snacks",)
     ).fetchone()
     assert pref is not None
-    assert pref["value"] == "dislikes"
+    assert "keto_snacks" in pref["value"]
     assert pref["source"] == "agent_inferred"
 
 
