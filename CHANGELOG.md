@@ -83,6 +83,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `search_web` Claude tool: searches the open web via Tavily API; returns `WebResult` objects classified by domain as `community`, `commercial`, or `unknown`; results sorted community-first (#16)
 - Domain lists (`community_domains.txt`, `commercial_domains.txt`) preloaded at startup via `resource_path`; cached in module-level sets (#16)
 - `search_web` registered in `ToolRegistry` only when `TAVILY_API_KEY` is set; absent key → tool not registered, no crash (#16)
+- `score_result(RedditPost | WebResult) -> CredibilityLabel` in `research/credibility.py`; labels `high`, `medium`, `low`, `flagged` (#17)
+- Reddit scoring: score thresholds (low < 20, medium 20–99, high ≥ 100) with one-tier promotion for ownership-language and "switched from" patterns (#17)
+- Web scoring: community domains → `high`, commercial → `low`, unknown → `medium`; affiliate URL patterns (`?ref=`, `/go/`, etc.) → `flagged` regardless of source type (#17)
+- `score_results()` batch function: appends `credibility` to each result; sets `batch_flag="coordinated_positivity"` when ≥ 3 low/flagged results share a 4-word n-gram (#17)
+- Research prompt updated: Claude instructed to discount `low`/`flagged` results and surface astroturfing warning when `coordinated_positivity` is set (#17)
 
 ### Fixed
 - Reddit requests returning 403: switched `User-Agent` from `Weles/0.1` to a Chrome browser string; added `Accept` and `Accept-Language` headers
