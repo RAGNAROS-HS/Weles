@@ -90,6 +90,22 @@ def add_to_history(
     return dict(row)
 
 
+def snooze_check_in(item_id: str, days: int = 30) -> bool:
+    """Defer a bought/tried item's check_in_due_at by `days` from now.
+
+    Returns True if the row was found and updated, False otherwise.
+    """
+    now = datetime.utcnow()
+    new_due = now + timedelta(days=days)
+    conn = get_db()
+    cur = conn.execute(
+        "UPDATE history SET check_in_due_at = ? WHERE id = ? AND status IN ('bought', 'tried')",
+        (new_due, item_id),
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+
 def snooze_follow_up(item_id: str, cadence_days: int) -> bool:
     """Defer a recommended item's follow_up_due_at by cadence_days from now.
 

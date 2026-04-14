@@ -2,6 +2,7 @@ from typing import Any
 
 from weles.agent.dispatch import ToolResult
 from weles.db.history_repo import add_to_history as _add_to_history
+from weles.db.history_repo import snooze_check_in as _snooze_check_in
 from weles.db.history_repo import snooze_follow_up as _snooze_follow_up
 from weles.db.settings_repo import get_setting
 
@@ -78,5 +79,32 @@ def snooze_follow_up_handler(tool_input: dict[str, Any]) -> ToolResult:
         )
     return ToolResult(
         summary="Follow-up item not found.",
+        data={"item_id": item_id},
+    )
+
+
+SNOOZE_CHECK_IN_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "item_id": {
+            "type": "string",
+            "description": "ID of the history item to snooze (from the check-in prompt context).",
+        },
+    },
+    "required": ["item_id"],
+}
+
+
+def snooze_check_in_handler(tool_input: dict[str, Any]) -> ToolResult:
+    """Defer the check-in for a bought/tried item by 30 days ('Remind me later')."""
+    item_id = tool_input["item_id"]
+    updated = _snooze_check_in(item_id, days=30)
+    if updated:
+        return ToolResult(
+            summary="Check-in snoozed for 30 days.",
+            data={"item_id": item_id, "snoozed_days": 30},
+        )
+    return ToolResult(
+        summary="Check-in item not found.",
         data={"item_id": item_id},
     )
