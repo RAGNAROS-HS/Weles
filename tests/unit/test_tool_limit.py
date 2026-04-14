@@ -78,3 +78,12 @@ async def test_exceeding_limit_emits_max_tool_calls_event_with_correct_fields() 
     max_calls_errors = [e for e in error_events if e.tool == "max_tool_calls"]
     assert len(max_calls_errors) >= 1
     assert max_calls_errors[0].error == "Research limit reached"
+
+    # Verify sentinel string was passed as tool result content to Claude
+    second_call_kwargs = mock_client.messages.stream.call_args_list[1][1]
+    last_user_content = second_call_kwargs["messages"][-1]["content"]
+    sentinel = "Research limit reached. Synthesise with what you have."
+    assert any(
+        item.get("type") == "tool_result" and item.get("content") == sentinel
+        for item in last_user_content
+    )
