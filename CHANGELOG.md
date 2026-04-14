@@ -80,12 +80,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `max_tool_calls_per_turn` enforced in `ToolRegistry`: reads from settings (default 6); 7th call in a turn raises `MaxToolCallsError` → `ToolErrorEvent` (#14)
 - LangSmith tracing: Anthropic client wrapped with `wrap_anthropic`; `stream_response` decorated with `@traceable(run_type="chain")`; `ToolRegistry.adispatch` decorated with `@traceable(run_type="tool")`
 - `LANGSMITH_ENDPOINT`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, `LANGSMITH_TRACING` added to `.env.example`; tracing is a no-op when `LANGSMITH_TRACING` is absent or false
+- `search_web` Claude tool: searches the open web via Tavily API; returns `WebResult` objects classified by domain as `community`, `commercial`, or `unknown`; results sorted community-first (#16)
+- Domain lists (`community_domains.txt`, `commercial_domains.txt`) preloaded at startup via `resource_path`; cached in module-level sets (#16)
+- `search_web` registered in `ToolRegistry` only when `TAVILY_API_KEY` is set; absent key → tool not registered, no crash (#16)
+- `score_result(RedditPost | WebResult) -> CredibilityLabel` in `research/credibility.py`; labels `high`, `medium`, `low`, `flagged` (#17)
+- Reddit scoring: score thresholds (low < 20, medium 20–99, high ≥ 100) with one-tier promotion for ownership-language and "switched from" patterns (#17)
+- Web scoring: community domains → `high`, commercial → `low`, unknown → `medium`; affiliate URL patterns (`?ref=`, `/go/`, etc.) → `flagged` regardless of source type (#17)
+- `score_results()` batch function: appends `credibility` to each result; sets `batch_flag="coordinated_positivity"` when ≥ 3 low/flagged results share a 4-word n-gram (#17)
+- Research prompt updated: Claude instructed to discount `low`/`flagged` results and surface astroturfing warning when `coordinated_positivity` is set (#17)
+- Research synthesis guidelines in `research.md`: signal strength labels (`[strong consensus]` / `[divided community]` / `[thin data]`), dissenting views, age/discontinuation flags, no manufacturer language, reasoning over conclusions (#18)
+- Research guidelines injected into user turn as a text block on first `search_reddit` or `search_web` call; injected once per stream (#18)
+- Tool failure notice sent to Claude after each tool batch: lists failed tool names; Claude instructed to continue and state which sources were unavailable (#18)
+- `ToolErrorEvent(tool="max_tool_calls", error="Research limit reached")` emitted when limit exceeded; sentinel `"Research limit reached. Synthesise with what you have."` sent to Claude (#18)
+- `scripts/eval_research.py`: runs 5 representative queries against live Claude for manual synthesis quality review; not a CI test (#18)
 
 ### Fixed
 - Reddit requests returning 403: switched `User-Agent` from `Weles/0.1` to a Chrome browser string; added `Accept` and `Accept-Language` headers
 - `GeneratorExit` error logged in LangSmith traces: removed early `break` on `DoneEvent` in the SSE router so `stream_response` exhausts naturally instead of being closed mid-flight
-
-<!-- Issues #15–18 -->
 
 ### v0.4 — Domain Modules
 <!-- Issues #19–22 -->

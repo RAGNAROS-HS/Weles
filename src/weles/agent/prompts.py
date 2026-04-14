@@ -21,10 +21,11 @@ def build_system_prompt(
     system_text = resource_path("src/weles/prompts/system.md").read_text(encoding="utf-8")
     blocks.append({"type": "text", "text": system_text})
 
-    # Block 2: mode addendum (skipped for general)
+    # Block 2: mode addendum + research guidelines (skipped for general)
     if mode != "general":
         mode_text = resource_path(f"src/weles/prompts/modes/{mode}.md").read_text(encoding="utf-8")
-        blocks.append({"type": "text", "text": mode_text})
+        research_text = resource_path("src/weles/prompts/research.md").read_text(encoding="utf-8")
+        blocks.append({"type": "text", "text": mode_text + "\n\n" + research_text})
 
     # Block 3: profile context (omitted when profile is empty and no preferences)
     profile_text = build_profile_block(profile or UserProfile(), preferences or [])

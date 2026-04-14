@@ -1,1 +1,38 @@
-# Subreddit routing config — populated in #15
+[shopping.general]
+subreddits = ["BuyItForLife", "frugalmalefashion", "femalefashionadvice"]
+
+[shopping.footwear]
+subreddits = ["goodyearwelt", "BuyItForLife", "malefashionadvice"]
+
+[shopping.electronics]
+subreddits = ["hardware", "headphones", "MechanicalKeyboards"]
+
+[shopping.kitchen]
+subreddits = ["BuyItForLife", "Cooking", "castiron"]
+
+[diet.general]
+subreddits = ["nutrition", "EatCheapAndHealthy", "MealPrepSunday"]
+
+[diet.keto]
+subreddits = ["keto", "ketogains"]
+
+[diet.vegan]
+subreddits = ["veganfitness", "PlantBasedDiet"]
+
+[fitness.general]
+subreddits = ["Fitness", "weightroom", "bodyweightfitness"]
+
+[fitness.running]
+subreddits = ["running", "trailrunning", "BuyItForLife"]
+
+[fitness.supplements]
+subreddits = ["Supplements", "nattyorjuice", "veganfitness"]
+
+[lifestyle.general]
+subreddits = ["BuyItForLife", "minimalism", "organization"]
+
+[lifestyle.coffee]
+subreddits = ["Coffee", "espresso", "BuyItForLife"]
+
+[lifestyle.home]
+subreddits = ["BuyItForLife", "homeowners", "organization"]
