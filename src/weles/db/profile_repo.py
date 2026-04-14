@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -75,6 +76,32 @@ def update_profile(patch: dict[str, Any]) -> UserProfile:
     except ValidationError:
         logger.exception("Profile row contains invalid data after update; returning empty profile")
         return UserProfile()
+
+
+def update_preference(
+    dimension: str,
+    value: str,
+    reason: str | None = None,
+    source: str = "user_explicit",
+) -> None:
+    """Upsert a preference row. Updates value/reason/source if the dimension already exists."""
+    conn = get_db()
+    existing = conn.execute(
+        "SELECT id FROM preferences WHERE dimension = ?", (dimension,)
+    ).fetchone()
+    if existing:
+        conn.execute(
+            "UPDATE preferences SET value = ?, reason = ?, source = ?, created_at = ?"
+            " WHERE dimension = ?",
+            (value, reason, source, datetime.utcnow(), dimension),
+        )
+    else:
+        conn.execute(
+            "INSERT INTO preferences (id, dimension, value, reason, source, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (str(uuid.uuid4()), dimension, value, reason, source, datetime.utcnow()),
+        )
+    conn.commit()
 
 
 def get_preferences() -> list[Preference]:

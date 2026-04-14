@@ -74,6 +74,9 @@ def _build_description(tool_name: str, tool_input: dict[str, Any]) -> str:
         return "Snoozing follow-up reminder…"
     if tool_name == "snooze_check_in":
         return "Snoozing check-in reminder…"
+    if tool_name == "update_preference":
+        dimension = tool_input.get("dimension", "preference")
+        return f"Saving preference: {dimension}…"
     return f"Running {tool_name}…"
 
 
