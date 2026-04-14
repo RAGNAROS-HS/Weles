@@ -21,11 +21,19 @@ def build_system_prompt(
     system_text = resource_path("src/weles/prompts/system.md").read_text(encoding="utf-8")
     blocks.append({"type": "text", "text": system_text})
 
-    # Block 2: mode addendum + research guidelines (skipped for general)
+    # Block 2: mode addendum + optional hard constraints + research guidelines (skipped for general)
     if mode != "general":
         mode_text = resource_path(f"src/weles/prompts/modes/{mode}.md").read_text(encoding="utf-8")
         research_text = resource_path("src/weles/prompts/research.md").read_text(encoding="utf-8")
-        blocks.append({"type": "text", "text": mode_text + "\n\n" + research_text})
+        combined = mode_text
+        if mode == "diet" and profile and profile.dietary_restrictions:
+            constraint = (
+                f"Hard constraints: user cannot eat {profile.dietary_restrictions}. "
+                "Never suggest items containing these. "
+                "Discard research results that include them."
+            )
+            combined = combined + "\n\n" + constraint
+        blocks.append({"type": "text", "text": combined + "\n\n" + research_text})
 
     # Block 3: profile context (omitted when profile is empty and no preferences)
     profile_text = build_profile_block(profile or UserProfile(), preferences or [])
