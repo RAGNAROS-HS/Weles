@@ -108,6 +108,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `config/programs.toml` populated with 6 community-vetted programs (5/3/1, GZCLP, Starting Strength, PHUL, C25K, Bodyweight Fitness RR) with level/goal/equipment/source metadata (#21)
 - `filter_programs(level, goal, equipment)` in `research/programs.py`; loaded via `resource_path` (#21)
 - Programs list and injury_history flag injected into fitness mode system prompt when profile fields are set (#21)
+- Lifestyle mode prompt (`prompts/modes/lifestyle.md`): sub-intent classification (product_ecosystem, maintenance_care, organisation, routine), tool-use sequences with web-search fallback, anti-trend enforcement (sustained-use bias, source age always flagged), profile filters for living_situation / climate (#22)
 
 ### v0.5 — Learning Loop
 <!-- Issues #23–28 -->
