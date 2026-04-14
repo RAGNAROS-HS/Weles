@@ -123,6 +123,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `run_session_start_checks(db)` in `api/session_start.py`: orchestrates all session-start checks in order — passive pattern detection, decay, follow-up, check-in; returns `SessionStartResult{prompt, notices}`; at most one user-facing prompt (#24)
 - Passive pattern detection writes `preferences` row with `source="agent_inferred"` when ≥3 history items are skipped in the same domain+category (#24)
 - `check_follow_up(db) -> SessionStartPrompt | None` in `api/session_start.py`; queries oldest overdue recommended item; returns `follow_up` prompt or `None` (#25)
+- `snooze_follow_up(item_id, cadence_days)` in `history_repo.py`; `snooze_follow_up` Claude tool registered in registry (#25)
+- `check_check_in(db) -> SessionStartPrompt | None` in `api/session_start.py`; queries oldest overdue bought/tried item; returns `check_in` prompt or `None` (#26)
+- `snooze_check_in(item_id, days=30)` in `history_repo.py`; `snooze_check_in` Claude tool registered in registry for "Remind me later" response (#26)
 
 #### Changed
 - `POST /sessions` returns `session_start_prompt: {prompt, notices}` from the orchestrator instead of a static `null` (#24)

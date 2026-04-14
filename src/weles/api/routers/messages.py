@@ -31,8 +31,10 @@ from weles.db.settings_repo import get_setting
 from weles.research.routing import get_subcategories, get_subreddits
 from weles.tools.history_tools import (
     ADD_TO_HISTORY_SCHEMA,
+    SNOOZE_CHECK_IN_SCHEMA,
     SNOOZE_FOLLOW_UP_SCHEMA,
     add_to_history_handler,
+    snooze_check_in_handler,
     snooze_follow_up_handler,
 )
 from weles.tools.profile_tools import SAVE_PROFILE_FIELD_SCHEMA, save_profile_field_handler
@@ -208,6 +210,11 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             "snooze_follow_up",
             snooze_follow_up_handler,
             SNOOZE_FOLLOW_UP_SCHEMA,
+        )
+        registry.register(
+            "snooze_check_in",
+            snooze_check_in_handler,
+            SNOOZE_CHECK_IN_SCHEMA,
         )
         registry.register(
             "search_reddit",

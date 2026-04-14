@@ -148,8 +148,14 @@ def _step3_followup_check(conn: sqlite3.Connection) -> SessionStartPrompt | None
     return check_follow_up(conn)
 
 
-def _step4_checkin_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
-    """Return a check-in prompt when a bought/tried item has passed its check_in_due_at."""
+def check_check_in(conn: sqlite3.Connection | None = None) -> SessionStartPrompt | None:
+    """Return a check-in prompt when a bought/tried item has passed its check_in_due_at.
+
+    Queries: SELECT * FROM history WHERE status IN ('bought','tried')
+             AND check_in_due_at <= now() ORDER BY check_in_due_at ASC LIMIT 1
+    """
+    if conn is None:
+        conn = get_db()
     now = datetime.utcnow()
     row = conn.execute(
         "SELECT * FROM history WHERE status IN ('bought', 'tried')"
@@ -169,6 +175,10 @@ def _step4_checkin_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
         type="check_in",
         message=f"It's been {days} days since you {verb} {row['item_name']}. How's it going?",
     )
+
+
+def _step4_checkin_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
+    return check_check_in(conn)
 
 
 def run_session_start_checks(conn: sqlite3.Connection | None = None) -> SessionStartResult:
