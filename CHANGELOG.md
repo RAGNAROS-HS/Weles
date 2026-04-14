@@ -111,7 +111,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Lifestyle mode prompt (`prompts/modes/lifestyle.md`): sub-intent classification (product_ecosystem, maintenance_care, organisation, routine), tool-use sequences with web-search fallback, anti-trend enforcement (sustained-use bias, source age always flagged), profile filters for living_situation / climate (#22)
 
 ### v0.5 — Learning Loop
-<!-- Issues #23–28 -->
+
+#### Added
+- `CONTEXT_WINDOW = 200_000` constant and `estimated_tokens(messages)` in `agent/session.py`; word-count × 1.3 approximation (#23)
+- `Session.get_messages_for_context()`: returns messages as role/content dicts for the Claude API, stripping internal tracking fields; compressed messages are returned with their already-substituted summary content (#23)
+- `compress_tool_results(session_id, client, turn_messages)` in `agent/compression.py`: replaces tool_result block content with a 2-sentence Claude summary; fire-and-forget, does not block the stream (#23)
+- `maybe_compress_context(session_id, client, session)` in `agent/compression.py`: when `estimated_tokens > 0.8 × CONTEXT_WINDOW`, summarises the oldest 25% of user+assistant pairs; the last 10 messages are never touched; updates DB and in-memory session (#23)
+- Context compression triggered as a background task after every SSE turn in `api/routers/messages.py` (#23)
+
+#### Fixed
+- `tool_result` blocks now appear before `text` blocks in user messages following a tool-use turn; previous ordering caused `BadRequestError` from the Anthropic API (#23)
 
 ### v0.6 — Signal Quality
 <!-- Issues #29–31 -->

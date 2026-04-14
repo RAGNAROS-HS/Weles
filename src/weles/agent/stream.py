@@ -165,8 +165,8 @@ async def stream_response(
                     }
                 )
 
-        # Build user content: optional research guidance + optional failure notice + tool results
-        user_content: list[dict[str, Any]] = []
+        # Build user content: tool_results FIRST (required by Anthropic API), then text blocks
+        user_content: list[dict[str, Any]] = list(tool_results)
 
         if not research_guidance_injected and any(t.name in _RESEARCH_TOOLS for t in tool_uses):
             guidance = resource_path(_RESEARCH_PROMPT_PATH).read_text(encoding="utf-8")
@@ -176,8 +176,6 @@ async def stream_response(
         failure_msg = _build_failure_message(failed_tools)
         if failure_msg:
             user_content.append({"type": "text", "text": failure_msg})
-
-        user_content.extend(tool_results)
 
         current_messages = current_messages + [
             {"role": "assistant", "content": assistant_content},
