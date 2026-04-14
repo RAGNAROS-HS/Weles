@@ -90,6 +90,22 @@ def add_to_history(
     return dict(row)
 
 
+def snooze_follow_up(item_id: str, cadence_days: int) -> bool:
+    """Defer a recommended item's follow_up_due_at by cadence_days from now.
+
+    Returns True if the row was found and updated, False otherwise.
+    """
+    now = datetime.utcnow()
+    new_due = now + timedelta(days=cadence_days)
+    conn = get_db()
+    cur = conn.execute(
+        "UPDATE history SET follow_up_due_at = ? WHERE id = ? AND status = 'recommended'",
+        (new_due, item_id),
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+
 def get_history_context(domain: str) -> str | None:
     conn = get_db()
     rows = conn.execute(
