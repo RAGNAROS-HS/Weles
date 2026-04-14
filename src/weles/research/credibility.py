@@ -6,7 +6,9 @@ from weles.tools.web import WebResult
 
 CredibilityLabel = Literal["high", "medium", "low", "flagged"]
 
-_OWNERSHIP_RE = re.compile(r"\b(owned?|had|using|used)\b.{0,40}\b(\d+)\s*(year|month)s?\b")
+_OWNERSHIP_RE = re.compile(
+    r"\b(owned?|had|using|used)\b.{0,40}\b(\d+)\s*(year|month)s?\b", re.DOTALL
+)
 _SWITCHED_RE = re.compile(r"\bswitched?\s+(from|away\s+from)\b")
 _AFFILIATE_RE = re.compile(r"[?&](ref|aff|tag)=|/(go|out|recommends)/")
 
