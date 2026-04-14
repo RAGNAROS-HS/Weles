@@ -130,6 +130,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `update_preference` Claude tool in `tools/profile_tools.py`; registered in `ToolRegistry`; source always `"user_explicit"` (#27)
 - System prompt instructs Claude to call `update_preference` immediately on user pushback (#27)
 - Passive pattern detection updated: dimension `{domain}.{category}`, value describes skipping pattern, delegates to `update_preference` (#27)
+- `check_decay(profile, thresholds) -> DecayPrompt | None` in `profile/decay.py`; returns prompt for most-overdue stale field; only non-null fields evaluated (#28)
+- `FIELD_DECAY_CATEGORY` mapping moved to `profile/decay.py`; `_step2_decay_check` in session_start delegates to `check_decay` (#28)
 
 #### Changed
 - `POST /sessions` returns `session_start_prompt: {prompt, notices}` from the orchestrator instead of a static `null` (#24)

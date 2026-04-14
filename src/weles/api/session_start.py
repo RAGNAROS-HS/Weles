@@ -5,32 +5,15 @@ Runs all session-start checks in order; returns at most one user-facing prompt.
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
 from weles.db.connection import get_db
-from weles.db.profile_repo import update_preference
+from weles.db.profile_repo import get_profile, update_preference
 from weles.db.settings_repo import get_setting
-
-# Maps profile field → decay_thresholds category key
-_FIELD_DECAY_CATEGORY: dict[str, str] = {
-    "fitness_goal": "goals",
-    "dietary_goal": "goals",
-    "lifestyle_focus": "goals",
-    "fitness_level": "fitness_level",
-    "dietary_approach": "dietary_approach",
-    "height_cm": "body_metrics",
-    "weight_kg": "body_metrics",
-    "build": "body_metrics",
-    "aesthetic_style": "taste_lifestyle",
-    "activity_level": "taste_lifestyle",
-    "living_situation": "taste_lifestyle",
-    "climate": "taste_lifestyle",
-    "budget_psychology": "taste_lifestyle",
-}
+from weles.profile.decay import check_decay
 
 
 @dataclass
@@ -77,40 +60,14 @@ def _step1_passive_patterns(conn: sqlite3.Connection) -> None:
 
 
 def _step2_decay_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
-    """Return a decay prompt when any tracked profile field is older than its threshold."""
-    row = conn.execute("SELECT * FROM profile WHERE id = 1").fetchone()
-    if row is None:
-        return None
-    timestamps: dict[str, str] = json.loads(row["field_timestamps"] or "{}")
-    if not timestamps:
-        return None
-
+    """Return a decay prompt for the most-overdue stale profile field."""
+    profile = get_profile()
     thresholds_raw = get_setting("decay_thresholds") or {}
     thresholds: dict[str, int] = thresholds_raw if isinstance(thresholds_raw, dict) else {}
-    now = datetime.utcnow()
-
-    for field_name, category in _FIELD_DECAY_CATEGORY.items():
-        ts_str = timestamps.get(field_name)
-        if not ts_str:
-            continue
-        value = row[field_name]
-        if value is None:
-            continue
-        threshold_days = thresholds.get(category, 365)
-        try:
-            ts = datetime.fromisoformat(ts_str)
-        except ValueError:
-            continue
-        age_days = (now - ts).days
-        if age_days >= threshold_days:
-            label = field_name.replace("_", " ")
-            return SessionStartPrompt(
-                type="decay",
-                message=(
-                    f"Your {label} was last set {age_days} days ago as '{value}'. Still accurate?"
-                ),
-            )
-    return None
+    result = check_decay(profile, thresholds)
+    if result is None:
+        return None
+    return SessionStartPrompt(type=result.type, message=result.message)
 
 
 def check_follow_up(conn: sqlite3.Connection | None = None) -> SessionStartPrompt | None:
