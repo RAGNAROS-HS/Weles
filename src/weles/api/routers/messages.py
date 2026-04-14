@@ -1,3 +1,4 @@
+import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from weles.agent.client import get_client
+from weles.agent.compression import maybe_compress_context
 from weles.agent.context import check_missing_fields
 from weles.agent.dispatch import ToolRegistry
 from weles.agent.prompts import build_system_prompt
@@ -82,10 +84,18 @@ def _get_session(session_id: str) -> dict[str, Any]:
 def _load_history(session_id: str) -> list[dict[str, Any]]:
     conn = get_db()
     rows = conn.execute(
-        "SELECT role, content FROM messages WHERE session_id = ? ORDER BY created_at ASC",
+        "SELECT role, content, is_compressed FROM messages"
+        " WHERE session_id = ? ORDER BY created_at ASC",
         (session_id,),
     ).fetchall()
-    return [{"role": row["role"], "content": row["content"]} for row in rows]
+    return [
+        {
+            "role": row["role"],
+            "content": row["content"],
+            "is_compressed": bool(row["is_compressed"]),
+        }
+        for row in rows
+    ]
 
 
 def _save_message(session_id: str, role: str, content: str, tool_name: str | None = None) -> None:
@@ -130,7 +140,11 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             set_first_session_at(datetime.utcnow())
             request.app.state.is_first_run = False
 
-        history = _load_history(session_id)
+        # Sync in-memory session from DB (includes is_compressed state)
+        mem_session = _get_or_create_session(session_id)
+        raw_history = _load_history(session_id)
+        mem_session.messages = raw_history
+
         session_row = _get_session(session_id)
         mode = session_row.get("mode", "general")
         profile = get_profile()
@@ -151,8 +165,10 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
                     }
                 ]
 
+        # Build context list (strips internal fields; uses compressed content where set)
+        history = mem_session.get_messages_for_context()
+
         # Inject missing-field note into the user turn
-        mem_session = _get_or_create_session(session_id)
         missing = check_missing_fields(mode, profile)
         unasked = [f for f in missing if f not in mem_session.asked_this_session]
         if unasked:
@@ -219,6 +235,9 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
 
         if reply_parts:
             _save_message(session_id, "assistant", "".join(reply_parts))
+
+        # Fire-and-forget: compress context if approaching token limit
+        asyncio.create_task(maybe_compress_context(session_id, client, mem_session))
 
     return EventSourceResponse(event_stream())
 
