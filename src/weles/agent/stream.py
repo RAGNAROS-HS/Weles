@@ -70,6 +70,8 @@ def _build_description(tool_name: str, tool_input: dict[str, Any]) -> str:
     if tool_name == "save_profile_field":
         field = tool_input.get("field", "field")
         return f"Saving {field} to your profile…"
+    if tool_name == "snooze_follow_up":
+        return "Snoozing follow-up reminder…"
     return f"Running {tool_name}…"
 
 

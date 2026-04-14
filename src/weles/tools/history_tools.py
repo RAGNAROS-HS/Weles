@@ -2,6 +2,8 @@ from typing import Any
 
 from weles.agent.dispatch import ToolResult
 from weles.db.history_repo import add_to_history as _add_to_history
+from weles.db.history_repo import snooze_follow_up as _snooze_follow_up
+from weles.db.settings_repo import get_setting
 
 ADD_TO_HISTORY_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -49,3 +51,32 @@ def add_to_history_handler(tool_input: dict[str, Any]) -> ToolResult:
         notes=tool_input.get("notes"),
     )
     return ToolResult(summary=f"Saved {item['item_name']} to history.", data=item)
+
+
+SNOOZE_FOLLOW_UP_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "item_id": {
+            "type": "string",
+            "description": "ID of the history item to snooze (from the follow-up prompt context).",
+        },
+    },
+    "required": ["item_id"],
+}
+
+
+def snooze_follow_up_handler(tool_input: dict[str, Any]) -> ToolResult:
+    """Defer the follow-up for a recommended item by the configured cadence interval."""
+    cadence = get_setting("follow_up_cadence") or "off"
+    cadence_days = 7 if cadence == "weekly" else 30  # monthly fallback
+    item_id = tool_input["item_id"]
+    updated = _snooze_follow_up(item_id, cadence_days)
+    if updated:
+        return ToolResult(
+            summary=f"Follow-up snoozed for {cadence_days} days.",
+            data={"item_id": item_id, "snoozed_days": cadence_days},
+        )
+    return ToolResult(
+        summary="Follow-up item not found.",
+        data={"item_id": item_id},
+    )
