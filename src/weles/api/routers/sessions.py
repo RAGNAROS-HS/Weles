@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from weles.api.session_start import run_session_start_checks
 from weles.db.connection import get_db
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -45,12 +46,13 @@ async def create_session() -> dict[str, Any]:
         (session_id, now),
     )
     conn.commit()
+    checks = run_session_start_checks(conn)
     return {
         "id": session_id,
         "title": None,
         "mode": "general",
         "created_at": now.isoformat(),
-        "session_start_prompt": None,
+        "session_start_prompt": checks.to_dict(),
     }
 
 
