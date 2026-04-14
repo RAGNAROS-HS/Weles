@@ -102,6 +102,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 #### Added
 - Shopping mode prompt (`prompts/modes/shopping.md`): sub-intent classification (category_research, product_lookup, comparative, buy_timing), tool-use sequence, response structures per intent, profile filters for budget_psychology / aesthetic_style / country (#19)
+- Diet mode prompt (`prompts/modes/diet.md`): sub-intent classification (meal_suggestion, approach_validation, supplement_guidance, recipe_sourcing), tool-use sequences, response structures per intent (#20)
+- Dietary restrictions hard constraint injected into diet mode system prompt when `dietary_restrictions` is set in profile; constraint instructs Claude to discard non-compliant research results (#20)
 
 ### v0.5 — Learning Loop
 <!-- Issues #23–28 -->
