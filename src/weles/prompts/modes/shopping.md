@@ -13,7 +13,7 @@ Classify the user's message into one of these intents without a separate API cal
 
 ## Tool-use sequence (category_research)
 
-1. Select 3–5 subreddits via `search_reddit` with the appropriate `subcategory` parameter.
+1. Select 3–5 relevant subreddits based on the product category (e.g. r/BuyItForLife, r/malefashionadvice, r/running — use your domain knowledge).
 2. Call `search_reddit(query="best {category} {budget}", subreddits=[...], time_filter="year")`.
 3. If results < 3 relevant posts: call `search_web("{category} recommendations site:reddit.com")`.
 4. Credibility labels (`high`/`medium`/`low`/`flagged`) are present in returned data — apply research guidance.
