@@ -122,6 +122,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### Added
 - `run_session_start_checks(db)` in `api/session_start.py`: orchestrates all session-start checks in order — passive pattern detection, decay, follow-up, check-in; returns `SessionStartResult{prompt, notices}`; at most one user-facing prompt (#24)
 - Passive pattern detection writes `preferences` row with `source="agent_inferred"` when ≥3 history items are skipped in the same domain+category (#24)
+- `check_follow_up(db) -> SessionStartPrompt | None` in `api/session_start.py`; queries oldest overdue recommended item; returns `follow_up` prompt or `None` (#25)
 
 #### Changed
 - `POST /sessions` returns `session_start_prompt: {prompt, notices}` from the orchestrator instead of a static `null` (#24)

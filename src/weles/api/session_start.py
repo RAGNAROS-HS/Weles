@@ -121,8 +121,14 @@ def _step2_decay_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
     return None
 
 
-def _step3_followup_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
-    """Return a follow-up prompt when a recommended item has passed its follow_up_due_at."""
+def check_follow_up(conn: sqlite3.Connection | None = None) -> SessionStartPrompt | None:
+    """Return a follow-up prompt when a recommended item has passed its follow_up_due_at.
+
+    Queries: SELECT * FROM history WHERE status='recommended'
+             AND follow_up_due_at <= now() ORDER BY follow_up_due_at ASC LIMIT 1
+    """
+    if conn is None:
+        conn = get_db()
     now = datetime.utcnow()
     row = conn.execute(
         "SELECT * FROM history WHERE status = 'recommended'"
@@ -136,6 +142,10 @@ def _step3_followup_check(conn: sqlite3.Connection) -> SessionStartPrompt | None
         type="follow_up",
         message=f"Did you end up getting {row['item_name']}?",
     )
+
+
+def _step3_followup_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
+    return check_follow_up(conn)
 
 
 def _step4_checkin_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
