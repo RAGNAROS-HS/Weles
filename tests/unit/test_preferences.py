@@ -42,16 +42,18 @@ def test_update_preference_appears_in_profile_block(tmp_db) -> None:
     assert "No minimalist" in block
 
 
-def test_passive_detection_writes_preference_on_three_skips(tmp_db) -> None:
+async def test_passive_detection_writes_preference_on_three_skips(tmp_db, mocker) -> None:
     """Passive detection writes one preference when ≥3 items are skipped in same domain+category."""
     from weles.api.session_start import run_session_start_checks
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     for name in ("Boot A", "Boot B", "Boot C"):
         _insert_history(conn, name, "shopping", "footwear", "skipped")
 
-    run_session_start_checks(conn)
+    await run_session_start_checks(conn)
 
     row = conn.execute("SELECT * FROM preferences WHERE dimension = 'shopping.footwear'").fetchone()
     assert row is not None
@@ -59,16 +61,18 @@ def test_passive_detection_writes_preference_on_three_skips(tmp_db) -> None:
     assert "footwear" in row["value"]
 
 
-def test_passive_detection_does_not_write_on_two_skips(tmp_db) -> None:
+async def test_passive_detection_does_not_write_on_two_skips(tmp_db, mocker) -> None:
     """Passive detection writes nothing when fewer than 3 items are skipped."""
     from weles.api.session_start import run_session_start_checks
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     for name in ("Boot A", "Boot B"):
         _insert_history(conn, name, "shopping", "footwear", "skipped")
 
-    run_session_start_checks(conn)
+    await run_session_start_checks(conn)
 
     row = conn.execute("SELECT * FROM preferences WHERE dimension = 'shopping.footwear'").fetchone()
     assert row is None
