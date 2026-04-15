@@ -1,1 +1,26 @@
-# Seasonal config — populated in later issues
+# Seasonal surfacing config.
+# Each entry is surfaced at session start when:
+#   - current month is in `months`
+#   - user has any history in `domain`
+#
+# months: 1 = January … 12 = December
+
+[[entries]]
+domain = "fitness"
+months = [1, 2]
+prompt = "New year is a common time to reassess training — want me to review your current programme?"
+
+[[entries]]
+domain = "shopping"
+months = [11, 12]
+prompt = "Black Friday / holiday season is coming up — worth checking if anything on your wishlist is on sale."
+
+[[entries]]
+domain = "diet"
+months = [6, 7, 8]
+prompt = "Summer is here — good time to revisit hydration and lighter meal approaches if that interests you."
+
+[[entries]]
+domain = "lifestyle"
+months = [3, 4]
+prompt = "Spring is a natural reset point — let me know if you want ideas for any lifestyle changes."

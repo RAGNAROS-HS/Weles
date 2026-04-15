@@ -46,7 +46,7 @@ async def create_session() -> dict[str, Any]:
         (session_id, now),
     )
     conn.commit()
-    checks = run_session_start_checks(conn)
+    checks = await run_session_start_checks(conn)
     return {
         "id": session_id,
         "title": None,

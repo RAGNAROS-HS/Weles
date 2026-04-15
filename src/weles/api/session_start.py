@@ -5,15 +5,21 @@ Runs all session-start checks in order; returns at most one user-facing prompt.
 
 from __future__ import annotations
 
+import logging
 import sqlite3
+import tomllib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from weles.db.connection import get_db
 from weles.db.profile_repo import get_profile, update_preference
-from weles.db.settings_repo import get_setting
+from weles.db.settings_repo import get_setting, set_setting
 from weles.profile.decay import check_decay
+from weles.profile.models import UserProfile
+from weles.utils.paths import resource_path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -130,7 +136,102 @@ def _step4_checkin_check(conn: sqlite3.Connection) -> SessionStartPrompt | None:
     return check_check_in(conn)
 
 
-def run_session_start_checks(conn: sqlite3.Connection | None = None) -> SessionStartResult:
+async def run_proactive_checks(
+    conn: sqlite3.Connection,
+    profile: UserProfile,  # noqa: ARG001 — reserved for future profile-aware filtering
+) -> list[str]:
+    """Return QC alerts and seasonal notices for the current session.
+
+    Returns an empty list immediately if the ``proactive_surfacing`` setting is
+    ``"false"``.  Otherwise:
+
+    * Checks the 5 most recent *bought* / *tried* history items for recent
+      community quality-issue discussion on Reddit (cached 24 h per item).
+    * Surfaces seasonal notices from ``config/seasonal.toml`` when the current
+      month matches and the user has any history in the relevant domain.
+    """
+    from weles.tools.reddit import search_reddit
+
+    if get_setting("proactive_surfacing") == "false":
+        return []
+
+    notices: list[str] = []
+    now = datetime.utcnow()
+    _24h_ago = now - timedelta(hours=24)
+
+    # --- QC monitoring ---
+    rows = conn.execute(
+        "SELECT id, item_name FROM history"
+        " WHERE status IN ('bought', 'tried')"
+        " ORDER BY created_at DESC LIMIT 5"
+    ).fetchall()
+
+    for row in rows:
+        item_id: str = row["id"]
+        item_name: str = row["item_name"]
+        cache_key = f"qc_cache_{item_id}"
+
+        cached = get_setting(cache_key)
+        if cached and isinstance(cached, dict):
+            cached_ts_str = cached.get("timestamp")
+            if cached_ts_str:
+                try:
+                    cached_ts = datetime.fromisoformat(cached_ts_str)
+                    if cached_ts >= _24h_ago:
+                        continue
+                except ValueError:
+                    pass
+
+        try:
+            posts = await search_reddit(
+                query=f"{item_name} quality issue OR defect OR recall",
+                time_filter="month",
+                limit=5,
+            )
+        except Exception:
+            logger.warning("QC search failed for %s", item_name)
+            continue
+
+        found = False
+        for post in posts:
+            if post["score"] > 50:
+                found = True
+                url = post["url"]
+                notices.append(
+                    f"Recent community discussion about quality issues with {item_name}: {url}"
+                )
+                break
+
+        set_setting(cache_key, {"timestamp": now.isoformat(), "found": found})
+
+    # --- Seasonal surfacing ---
+    seasonal_path = resource_path("config/seasonal.toml")
+    try:
+        with open(seasonal_path, "rb") as fh:
+            seasonal_data = tomllib.load(fh)
+    except (FileNotFoundError, OSError):
+        return notices
+
+    current_month = now.month
+    for entry in seasonal_data.get("entries", []):
+        months: list[int] = entry.get("months", [])
+        if current_month not in months:
+            continue
+        domain: str = entry.get("domain", "")
+        if not domain:
+            continue
+        has_history = conn.execute(
+            "SELECT 1 FROM history WHERE domain = ? LIMIT 1", (domain,)
+        ).fetchone()
+        if has_history:
+            notices.append(entry["prompt"])
+
+    return notices
+
+
+async def run_session_start_checks(
+    conn: sqlite3.Connection | None = None,
+) -> SessionStartResult:
     """Run all session-start checks in order; return at most one user-facing prompt.
 
     Execution order:
@@ -138,7 +239,7 @@ def run_session_start_checks(conn: sqlite3.Connection | None = None) -> SessionS
     2. Profile decay check
     3. Follow-up check (skipped if step 2 produced a prompt)
     4. Check-in check (skipped if step 2 or 3 produced a prompt)
-    5. QC / proactive surfacing (notices only; independent of prompt — implemented in #31)
+    5. QC / proactive surfacing (notices only; independent of prompt)
     """
     if conn is None:
         conn = get_db()
@@ -155,7 +256,7 @@ def run_session_start_checks(conn: sqlite3.Connection | None = None) -> SessionS
     if result.prompt is None:
         result.prompt = _step4_checkin_check(conn)
 
-    # Step 5: QC / proactive surfacing (notices only) — implemented in #31
-    # result.notices = _step5_qc_notices(conn)
+    profile = get_profile()
+    result.notices = await run_proactive_checks(conn, profile)
 
     return result
