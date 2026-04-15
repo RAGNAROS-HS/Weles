@@ -54,19 +54,21 @@ def _set_profile_field_with_timestamp(conn, field_name: str, value: str, days_ag
     conn.commit()
 
 
-def test_no_due_items_returns_empty(tmp_db) -> None:
+async def test_no_due_items_returns_empty(tmp_db) -> None:
     """With no due items, returns {prompt: None, notices: []}."""
     from weles.db.connection import get_db
 
     conn = get_db()
-    result = run_session_start_checks(conn)
+    result = await run_session_start_checks(conn)
     assert result.prompt is None
     assert result.notices == []
 
 
-def test_decay_wins_over_followup(tmp_db) -> None:
+async def test_decay_wins_over_followup(tmp_db, mocker) -> None:
     """With decay due AND follow-up due, decay prompt is returned (decay wins)."""
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     # Fitness level set 200 days ago (threshold = 90 days)
@@ -77,14 +79,16 @@ def test_decay_wins_over_followup(tmp_db) -> None:
         conn, "Running Shoes", "shopping", "footwear", "recommended", follow_up_due_at=past
     )
 
-    result = run_session_start_checks(conn)
+    result = await run_session_start_checks(conn)
     assert result.prompt is not None
     assert result.prompt.type == "decay"
 
 
-def test_followup_wins_over_checkin(tmp_db) -> None:
+async def test_followup_wins_over_checkin(tmp_db, mocker) -> None:
     """With follow-up due AND check-in due, follow-up prompt is returned."""
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     past = datetime.utcnow() - timedelta(days=1)
@@ -93,33 +97,37 @@ def test_followup_wins_over_checkin(tmp_db) -> None:
     )
     _insert_history(conn, "GZCLP", "fitness", "program", "bought", check_in_due_at=past)
 
-    result = run_session_start_checks(conn)
+    result = await run_session_start_checks(conn)
     assert result.prompt is not None
     assert result.prompt.type == "follow_up"
 
 
-def test_checkin_when_only_due(tmp_db) -> None:
+async def test_checkin_when_only_due(tmp_db, mocker) -> None:
     """With only a check-in due, check-in prompt is returned."""
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     past = datetime.utcnow() - timedelta(days=1)
     _insert_history(conn, "Starting Strength", "fitness", "program", "bought", check_in_due_at=past)
 
-    result = run_session_start_checks(conn)
+    result = await run_session_start_checks(conn)
     assert result.prompt is not None
     assert result.prompt.type == "check_in"
 
 
-def test_passive_detection_writes_preference(tmp_db) -> None:
+async def test_passive_detection_writes_preference(tmp_db, mocker) -> None:
     """Passive detection writes a preference when ≥3 items skipped in the same category."""
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     for i in range(3):
         _insert_history(conn, f"Keto Bar {i}", "diet", "keto_snacks", "skipped")
 
-    run_session_start_checks(conn)
+    await run_session_start_checks(conn)
 
     pref = conn.execute(
         "SELECT * FROM preferences WHERE dimension = ?", ("diet.keto_snacks",)
@@ -129,13 +137,15 @@ def test_passive_detection_writes_preference(tmp_db) -> None:
     assert pref["source"] == "agent_inferred"
 
 
-def test_passive_detection_returns_no_prompt(tmp_db) -> None:
+async def test_passive_detection_returns_no_prompt(tmp_db, mocker) -> None:
     """Passive pattern detection does not produce a user-facing prompt."""
     from weles.db.connection import get_db
+
+    mocker.patch("weles.api.session_start.run_proactive_checks", return_value=[])
 
     conn = get_db()
     for i in range(3):
         _insert_history(conn, f"Supplement {i}", "diet", "supplements", "skipped")
 
-    result = run_session_start_checks(conn)
+    result = await run_session_start_checks(conn)
     assert result.prompt is None

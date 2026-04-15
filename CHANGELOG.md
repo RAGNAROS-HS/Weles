@@ -148,6 +148,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `score_results` extended: tags `affiliate: True` on web results with affiliate URLs; geo-block filter tags `available: False` when domain is in `config/geo_blocks/{COUNTRY}.txt` and user country matches (#30)
 - Coordinated positivity detection extended: also fires when ≥3 low/flagged results all contain a shared astroturfing phrase (e.g. "exceeded my expectations") (#30)
 - `search_web_handler` and `search_reddit_handler` now call `score_results`; all credibility metadata present in results passed to Claude (#30)
+- `run_proactive_checks()` added as step 5 of the session-start orchestrator: checks the 5 most recent bought/tried items for Reddit quality-issue discussion (score > 50, cached 24 h per item) and surfaces seasonal notices from `config/seasonal.toml` when the user has domain history (#31)
+- `config/seasonal.toml` populated with four seasonal entries (fitness/January–February, shopping/November–December, diet/June–August, lifestyle/March–April) (#31)
 
 ### v1.0 — Distribution
 <!-- Issue #32 -->
