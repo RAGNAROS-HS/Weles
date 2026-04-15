@@ -16,11 +16,29 @@ lint:
 	uv run ruff check .
 	uv run mypy src/
 
+package:
+	cd frontend && npm run build
+	uv run pyinstaller weles.spec --clean
+
 install:
-	@echo "Implemented in #32"
+	powershell -NoProfile -ExecutionPolicy Bypass -Command "\
+		\$$src = 'dist\\Weles.exe'; \
+		\$$dst = \"\$$env:LOCALAPPDATA\\Weles\\Weles.exe\"; \
+		\$$startup = \"\$$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Weles.lnk\"; \
+		New-Item -ItemType Directory -Force -Path (Split-Path \$$dst) | Out-Null; \
+		Copy-Item -Force \$$src \$$dst; \
+		\$$ws = New-Object -ComObject WScript.Shell; \
+		\$$lnk = \$$ws.CreateShortcut(\$$startup); \
+		\$$lnk.TargetPath = \$$dst; \
+		\$$lnk.WorkingDirectory = (Split-Path \$$dst); \
+		\$$lnk.Save(); \
+		Write-Host 'Installed Weles to' \$$dst; \
+		Write-Host 'Startup shortcut created at' \$$startup \
+	"
 
 uninstall:
-	@echo "Implemented in #32"
-
-package:
-	@echo "Implemented in #32"
+	powershell -NoProfile -ExecutionPolicy Bypass -Command "\
+		\$$startup = \"\$$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Weles.lnk\"; \
+		if (Test-Path \$$startup) { Remove-Item -Force \$$startup; Write-Host 'Removed startup shortcut.' } \
+		else { Write-Host 'No startup shortcut found.' } \
+	"
