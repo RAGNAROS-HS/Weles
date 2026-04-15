@@ -152,7 +152,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `config/seasonal.toml` populated with four seasonal entries (fitness/January–February, shopping/November–December, diet/June–August, lifestyle/March–April) (#31)
 
 ### v1.0 — Distribution
-<!-- Issue #32 -->
+
+#### Added
+- `src/weles/tray.py`: system tray entry point using `pystray`; starts the FastAPI server in a daemon thread, left-click opens browser, right-click menu has Open / Restart server / Quit (#32)
+- Auto-opens browser on first launch (`GET /health` → `first_run: true`); waits for server to be ready before opening (#32)
+- Port conflict detection at startup: tooltip shows "Port {port} already in use"; right-click menu adds "Change port" which persists `WELES_PORT` to `~/.weles/.env` (#32)
+- `weles.spec`: PyInstaller spec committed; bundles `frontend/dist`, `config`, `prompts`, `blocklist`, `assets` into a single `console=False` `Weles.exe` (#32)
+- `make package`: runs `npm run build` then `pyinstaller weles.spec --clean` → `dist/Weles.exe` (#32)
+- `make install`: copies `dist/Weles.exe` to `%LOCALAPPDATA%\Weles\Weles.exe` and creates a `.lnk` startup shortcut in the Windows Startup folder; no admin rights required (#32)
+- `make uninstall`: removes the startup shortcut; does not touch `~/.weles/` data (#32)
+- `.github/workflows/build-windows.yml`: triggers on `tags: v*.*.*`; runs `make package` on `windows-latest`; uploads `dist/Weles.exe` as a GitHub release asset (#32)
 
 ---
 
