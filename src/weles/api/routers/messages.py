@@ -101,12 +101,13 @@ def _get_session(session_id: str) -> dict[str, Any]:
 def _load_history(session_id: str) -> list[dict[str, Any]]:
     conn = get_db()
     rows = conn.execute(
-        "SELECT role, content, is_compressed FROM messages"
+        "SELECT id, role, content, is_compressed FROM messages"
         " WHERE session_id = ? ORDER BY created_at ASC",
         (session_id,),
     ).fetchall()
     return [
         {
+            "id": row["id"],
             "role": row["role"],
             "content": row["content"],
             "is_compressed": bool(row["is_compressed"]),

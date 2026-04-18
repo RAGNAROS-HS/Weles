@@ -80,14 +80,12 @@ async def maybe_compress_context(
             a["content"] = compressed
             a["is_compressed"] = True
             conn.execute(
-                "UPDATE messages SET content = ?, is_compressed = 1"
-                " WHERE session_id = ? AND role = 'user' AND content = ?",
-                (compressed, session_id, u_text),
+                "UPDATE messages SET content = ?, is_compressed = 1 WHERE id = ?",
+                (compressed, u["id"]),
             )
             conn.execute(
-                "UPDATE messages SET content = ?, is_compressed = 1"
-                " WHERE session_id = ? AND role = 'assistant' AND content = ?",
-                (compressed, session_id, a_text),
+                "UPDATE messages SET content = ?, is_compressed = 1 WHERE id = ?",
+                (compressed, a["id"]),
             )
             i += 2
         else:
