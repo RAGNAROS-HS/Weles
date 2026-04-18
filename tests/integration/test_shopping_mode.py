@@ -138,7 +138,7 @@ def test_add_to_history_dispatched_and_persisted(client: TestClient, mocker) -> 
 
     _stream_events(client, session_id, "what boots should I get")
 
-    history = client.get("/history?domain=shopping").json()
+    history = client.get("/history?domain=shopping").json()["items"]
     assert any(item["item_name"] == "Red Wing 875" for item in history)
 
 

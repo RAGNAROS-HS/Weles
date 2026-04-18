@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { clearData, createSession, deleteHistoryItem, deletePreference, deleteSession, getProfile, getSettings, listHistory, listPreferences, listSessions, patchProfile, patchSession, patchSettings } from './api'
+import { clearData, createSession, deleteHistoryItem, deletePreference, deleteSession, getProfile, getSessionMessages, getSettings, listHistory, listPreferences, listSessions, patchProfile, patchSession, patchSettings } from './api'
 import type { ChatMessage, HistoryItem, Mode, Preference, Session, ToolProgress, UserProfile } from './types'
 import './App.css'
 
@@ -258,10 +258,10 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
 
   useEffect(() => {
     Promise.all([getProfile(), listPreferences(), listHistory(), getSettings()]).then(
-      ([p, pr, h, s]) => {
+      ([p, pr, hPage, s]) => {
         setProfile(p)
         setPrefs(pr)
-        setHistory(h)
+        setHistory(hPage.items)
         setThresholds((s.decay_thresholds as DecayThresholds) ?? {})
       }
     ).catch(() => setError('Failed to load — try refreshing'))
@@ -356,19 +356,34 @@ const STATUSES = ['', 'recommended', 'bought', 'tried', 'rated', 'skipped']
 
 function HistoryPage({ onBack }: { onBack: () => void }) {
   const [items, setItems] = useState<HistoryItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [offset, setOffset] = useState(0)
   const [domain, setDomain] = useState('')
   const [status, setStatus] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const LIMIT = 50
 
   useEffect(() => {
-    listHistory(domain || undefined, status || undefined).then(setItems).catch(() =>
-      setError('Failed to load — try refreshing')
-    )
+    setItems([])
+    setOffset(0)
+    setTotal(0)
+    listHistory(domain || undefined, status || undefined, LIMIT, 0)
+      .then(page => { setItems(page.items); setTotal(page.total) })
+      .catch(() => setError('Failed to load — try refreshing'))
   }, [domain, status])
+
+  async function loadMore() {
+    const nextOffset = offset + LIMIT
+    const page = await listHistory(domain || undefined, status || undefined, LIMIT, nextOffset)
+    setItems(prev => [...prev, ...page.items])
+    setOffset(nextOffset)
+    setTotal(page.total)
+  }
 
   async function handleDelete(id: string) {
     await deleteHistoryItem(id)
     setItems(prev => prev.filter(i => i.id !== id))
+    setTotal(prev => prev - 1)
   }
 
   if (error) return <div className="history-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
@@ -422,6 +437,9 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
           </table>
         )
       }
+      {total > offset + LIMIT && (
+        <button className="load-more-btn" onClick={loadMore}>Load more</button>
+      )}
     </div>
   )
 }
@@ -470,9 +488,7 @@ export default function App() {
   async function selectSession(id: string) {
     setActiveId(id)
     setPage('chat')
-    const r = await fetch(`/sessions/${id}/messages`)
-    if (!r.ok) throw new Error(`HTTP ${r.status}`)
-    const msgs = await r.json()
+    const msgs = await getSessionMessages(id)
     setMessages(
       msgs
         .filter((m: { role: string }) => m.role === 'user' || m.role === 'assistant')
@@ -485,6 +501,20 @@ export default function App() {
     const sess = sessions.find(s => s.id === id)
     if (sess) setMode(sess.mode as Mode)
     setToolProgress([])
+  }
+
+  async function loadOlderMessages(sessionId: string) {
+    if (messages.length === 0) return
+    const oldest = messages[0]
+    const older = await getSessionMessages(sessionId, 100, oldest.id)
+    const mapped = older
+      .filter((m: { role: string }) => m.role === 'user' || m.role === 'assistant')
+      .map((m: { id: string; role: string; content: string }) => ({
+        id: m.id,
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }))
+    setMessages(prev => [...mapped, ...prev])
   }
 
   async function removeSession(id: string, e: React.MouseEvent) {
@@ -654,6 +684,11 @@ export default function App() {
 
         {/* Messages */}
         <div className="messages">
+          {activeId && messages.length > 0 && (
+            <button className="load-older-btn" onClick={() => loadOlderMessages(activeId)}>
+              Load older messages
+            </button>
+          )}
           {messages.map(msg => (
             <div key={msg.id} className={`message ${msg.role}`}>
               <div className="bubble">

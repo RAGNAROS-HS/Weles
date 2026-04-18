@@ -59,7 +59,7 @@ def test_get_history_domain_filter(client: TestClient) -> None:
     _add(client, domain="fitness", status="bought")
     resp = client.get("/history?domain=shopping")
     assert resp.status_code == 200
-    items = resp.json()
+    items = resp.json()["items"]
     assert all(i["domain"] == "shopping" for i in items)
     assert any(i["domain"] == "shopping" for i in items)
 
@@ -69,7 +69,7 @@ def test_get_history_status_filter(client: TestClient) -> None:
     _add(client, status="bought")
     resp = client.get("/history?status=recommended")
     assert resp.status_code == 200
-    items = resp.json()
+    items = resp.json()["items"]
     assert all(i["status"] == "recommended" for i in items)
 
 

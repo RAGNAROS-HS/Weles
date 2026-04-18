@@ -13,9 +13,14 @@ _STATUS_PREFIX: dict[str, str] = {
 }
 
 
-def get_history(domain: str | None = None, status: str | None = None) -> list[dict[str, Any]]:
+def get_history(
+    domain: str | None = None,
+    status: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict[str, Any]:
     conn = get_db()
-    query = "SELECT * FROM history"
+    base = "FROM history"
     params: list[Any] = []
     filters = []
     if domain:
@@ -24,11 +29,18 @@ def get_history(domain: str | None = None, status: str | None = None) -> list[di
     if status:
         filters.append("status = ?")
         params.append(status)
-    if filters:
-        query += " WHERE " + " AND ".join(filters)
-    query += " ORDER BY created_at DESC"
-    rows = conn.execute(query, params).fetchall()
-    return [dict(row) for row in rows]
+    where = (" WHERE " + " AND ".join(filters)) if filters else ""
+    total: int = conn.execute(f"SELECT COUNT(*) {base}{where}", params).fetchone()[0]
+    rows = conn.execute(
+        f"SELECT * {base}{where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        params + [limit, offset],
+    ).fetchall()
+    return {
+        "items": [dict(row) for row in rows],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 def delete_history_item(item_id: str) -> bool:

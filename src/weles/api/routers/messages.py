@@ -308,11 +308,27 @@ def _agent_event_to_sse(event: AgentEvent, title: str, session_id: str) -> dict[
 
 
 @router.get("/sessions/{session_id}/messages")
-async def get_messages(session_id: str) -> list[dict[str, Any]]:
+async def get_messages(
+    session_id: str,
+    limit: int = 100,
+    before_id: str | None = None,
+) -> list[dict[str, Any]]:
     _get_session(session_id)
     conn = get_db()
+    if before_id is not None:
+        cursor_row = conn.execute(
+            "SELECT created_at FROM messages WHERE id = ?", (before_id,)
+        ).fetchone()
+        if cursor_row is None:
+            return []
+        rows = conn.execute(
+            "SELECT * FROM messages WHERE session_id = ? AND created_at < ?"
+            " ORDER BY created_at DESC LIMIT ?",
+            (session_id, cursor_row["created_at"], limit),
+        ).fetchall()
+        return list(reversed([dict(r) for r in rows]))
     rows = conn.execute(
-        "SELECT * FROM messages WHERE session_id = ? ORDER BY created_at ASC",
-        (session_id,),
+        "SELECT * FROM messages WHERE session_id = ? ORDER BY created_at DESC LIMIT ?",
+        (session_id, limit),
     ).fetchall()
-    return [dict(row) for row in rows]
+    return list(reversed([dict(r) for r in rows]))
