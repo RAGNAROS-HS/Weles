@@ -156,6 +156,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### Fixed
 - Information tab content is now scrollable when it exceeds the viewport height; settings page receives the same fix (#68)
 - Tool call limit check now fires before the handler executes; counter checked with `>=` before increment so exactly `max_tool_calls_per_turn` calls are permitted (#70)
+- `get_all_settings()` and `get_setting()` no longer crash on corrupt JSON in the settings table — bad rows are skipped with a warning (#71)
+- `set_setting()` validates value types for user-configurable keys; raises `ValueError` on invalid input, which the settings router converts to HTTP 422 (#71)
 
 ### v1.0 — Distribution
 
