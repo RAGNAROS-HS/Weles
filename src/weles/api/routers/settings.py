@@ -18,5 +18,8 @@ async def patch_settings(body: dict[str, Any]) -> dict[str, Any]:
     if unknown:
         raise HTTPException(status_code=422, detail=f"Unknown settings keys: {sorted(unknown)}")
     for key, value in body.items():
-        set_setting(key, value)
+        try:
+            set_setting(key, value)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
     return get_all_settings()
