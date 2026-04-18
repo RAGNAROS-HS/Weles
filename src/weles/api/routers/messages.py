@@ -81,6 +81,11 @@ def _get_or_create_session(session_id: str) -> Session:
     return _sessions[session_id]
 
 
+def evict_session(session_id: str) -> None:
+    """Remove a session from the in-memory cache. Called when a session is deleted."""
+    _sessions.pop(session_id, None)
+
+
 class MessageBody(BaseModel):
     content: str
 
