@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from weles.api.routers.messages import evict_session
 from weles.api.session_start import run_session_start_checks
 from weles.db.connection import get_db
 
@@ -94,3 +95,4 @@ async def delete_session(session_id: str) -> None:
     conn = get_db()
     conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
     conn.commit()
+    evict_session(session_id)
