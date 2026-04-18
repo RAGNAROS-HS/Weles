@@ -9,9 +9,12 @@ router = APIRouter(tags=["history"])
 
 @router.get("/history")
 async def list_history(
-    domain: str | None = None, status: str | None = None
-) -> list[dict[str, Any]]:
-    return get_history(domain=domain, status=status)
+    domain: str | None = None,
+    status: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict[str, Any]:
+    return get_history(domain=domain, status=status, limit=limit, offset=offset)
 
 
 @router.delete("/history/{item_id}", status_code=204)
