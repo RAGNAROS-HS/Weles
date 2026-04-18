@@ -205,7 +205,7 @@ body {
 .input-bar button:disabled { opacity: 0.4; cursor: default; }
 
 /* ── Settings page ── */
-.settings-page { max-width: 600px; margin: 40px auto; padding: 0 24px; }
+.settings-page { max-width: 600px; margin: 0 auto; padding: 40px 24px; height: 100vh; overflow-y: auto; }
 .settings-page h1 { margin-bottom: 24px; }
 .settings-page h2 { font-size: 15px; color: #aaa; margin-bottom: 12px; }
 .settings-page section { margin-bottom: 32px; border-bottom: 1px solid #2e2e2e; padding-bottom: 24px; }
@@ -229,7 +229,7 @@ body {
 .cleared-notice { color: #6a9; font-size: 13px; margin-bottom: 8px; }
 
 /* ── Information page ── */
-.info-page { max-width: 700px; margin: 40px auto; padding: 0 24px; }
+.info-page { max-width: 700px; margin: 0 auto; padding: 40px 24px; height: 100vh; overflow-y: auto; }
 .info-page h1 { margin-bottom: 24px; }
 .info-section { margin-bottom: 28px; border-bottom: 1px solid #2e2e2e; padding-bottom: 20px; }
 .info-section h2 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
