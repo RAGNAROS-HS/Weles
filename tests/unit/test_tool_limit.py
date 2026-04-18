@@ -19,6 +19,24 @@ def test_7th_dispatch_raises_max_tool_calls_error() -> None:
         registry.dispatch("t", {})
 
 
+def test_dispatch_raises_when_call_count_equals_max() -> None:
+    """When _call_count already equals max_calls, the next dispatch raises before executing."""
+    registry = ToolRegistry(max_calls=3)
+    executed = []
+    registry.register("t", lambda _: executed.append(1) or "ok", {"type": "object"})
+
+    for _ in range(3):
+        registry.dispatch("t", {})
+
+    assert registry._call_count == registry._max_calls
+    assert len(executed) == 3
+
+    with pytest.raises(MaxToolCallsError):
+        registry.dispatch("t", {})
+
+    assert len(executed) == 3  # handler was not called on the failing dispatch
+
+
 def test_call_count_resets_between_sessions() -> None:
     """Each ToolRegistry instance has its own counter; sessions don't share state."""
     r1 = ToolRegistry(max_calls=1)

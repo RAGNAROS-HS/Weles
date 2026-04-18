@@ -26,9 +26,9 @@ class ToolRegistry:
     def dispatch(self, tool_name: str, tool_input: dict[str, Any]) -> ToolResult:
         if tool_name not in self._handlers:
             raise ToolNotFoundError(f"Unknown tool: {tool_name!r}")
-        self._call_count += 1
-        if self._call_count > self._max_calls:
+        if self._call_count >= self._max_calls:
             raise MaxToolCallsError(f"Research limit reached (max {self._max_calls})")
+        self._call_count += 1
         result = self._handlers[tool_name](tool_input)
         if isinstance(result, ToolResult):
             return result
@@ -39,9 +39,9 @@ class ToolRegistry:
     async def adispatch(self, tool_name: str, tool_input: dict[str, Any]) -> ToolResult:
         if tool_name not in self._handlers:
             raise ToolNotFoundError(f"Unknown tool: {tool_name!r}")
-        self._call_count += 1
-        if self._call_count > self._max_calls:
+        if self._call_count >= self._max_calls:
             raise MaxToolCallsError(f"Research limit reached (max {self._max_calls})")
+        self._call_count += 1
         result = self._handlers[tool_name](tool_input)
         if inspect.isawaitable(result):
             result = await result
