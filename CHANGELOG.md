@@ -160,6 +160,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `set_setting()` validates value types for user-configurable keys; raises `ValueError` on invalid input, which the settings router converts to HTTP 422 (#71)
 - Deleting a session now cascades to remove all its messages (FK constraint was already in schema; `PRAGMA foreign_keys = ON` was already in connection); in-memory session cache is also evicted on delete (#72)
 - Context compression now matches messages by ID instead of content; previously two messages with identical text could cause the wrong one to be overwritten (#73)
+- SSE data-line parsing now wraps `JSON.parse` in try-catch; a malformed event no longer terminates the stream handler (#74)
+- All `api.ts` fetch calls now check `r.ok` before calling `.json()`; HTTP errors throw instead of crashing silently as parse errors (#74)
+- Settings, Information, and History pages show "Failed to load — try refreshing" instead of spinning "Loading…" indefinitely when the backend is unreachable (#74)
+- Null response body (network failure before headers complete) now removes the frozen assistant placeholder and shows "Connection failed — try again" (#74)
+- `newChat()` preserves the currently selected mode instead of always resetting to `general` (#74)
 
 ### v1.0 — Distribution
 

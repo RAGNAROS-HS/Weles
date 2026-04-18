@@ -296,3 +296,5 @@ body {
 .history-table td { padding: 8px 10px; border-bottom: 1px solid #1e1e1e; color: #ccc; }
 .history-table tr:hover td { background: #161616; }
 .history-notes { color: #666; cursor: default; }
+
+.page-error { color: #e07070; font-size: 14px; margin-top: 16px; }
