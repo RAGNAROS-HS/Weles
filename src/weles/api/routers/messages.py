@@ -1,6 +1,8 @@
 import asyncio
 import json
+import os
 import uuid
+from collections import OrderedDict
 from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
 from typing import Any
@@ -71,14 +73,21 @@ _MODE_TO_DOMAIN = {
 
 router = APIRouter(tags=["messages"])
 
-# In-memory per-session state (survives requests, reset on server restart)
-_sessions: dict[str, Session] = {}
+_SESSION_CACHE_SIZE = int(os.environ.get("WELES_SESSION_CACHE_SIZE", "50"))
+
+# LRU cache capped at _SESSION_CACHE_SIZE entries (OrderedDict move_to_end pattern)
+_sessions: OrderedDict[str, Session] = OrderedDict()
 
 
 def _get_or_create_session(session_id: str) -> Session:
-    if session_id not in _sessions:
-        _sessions[session_id] = Session()
-    return _sessions[session_id]
+    if session_id in _sessions:
+        _sessions.move_to_end(session_id)
+        return _sessions[session_id]
+    session = Session()
+    _sessions[session_id] = session
+    if len(_sessions) > _SESSION_CACHE_SIZE:
+        _sessions.popitem(last=False)
+    return session
 
 
 def evict_session(session_id: str) -> None:
