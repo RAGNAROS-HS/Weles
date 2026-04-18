@@ -151,6 +151,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `run_proactive_checks()` added as step 5 of the session-start orchestrator: checks the 5 most recent bought/tried items for Reddit quality-issue discussion (score > 50, cached 24 h per item) and surfaces seasonal notices from `config/seasonal.toml` when the user has domain history (#31)
 - `config/seasonal.toml` populated with four seasonal entries (fitness/January–February, shopping/November–December, diet/June–August, lifestyle/March–April) (#31)
 
+### Bug fixes
+
+#### Fixed
+- Information tab content is now scrollable when it exceeds the viewport height; settings page receives the same fix (#68)
+
 ### v1.0 — Distribution
 
 #### Added
