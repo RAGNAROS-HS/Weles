@@ -40,4 +40,4 @@ def test_alembic_revision(tmp_db: Path) -> None:
     conn = sqlite3.connect(tmp_db)
     revision = conn.execute("SELECT version_num FROM alembic_version").fetchone()[0]
     conn.close()
-    assert revision == "001_initial"
+    assert revision == "002_add_indices"
