@@ -37,6 +37,7 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
   const [confirmClear, setConfirmClear] = useState(false)
   const [decayDraft, setDecayDraft] = useState<Record<string, number>>(DECAY_DEFAULTS)
   const [settingsLoaded, setSettingsLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     getSettings().then(s => {
@@ -44,7 +45,7 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
       const fromServer = (s.decay_thresholds as Record<string, number>) ?? {}
       setDecayDraft({ ...DECAY_DEFAULTS, ...fromServer })
       setSettingsLoaded(true)
-    })
+    }).catch(() => setError('Failed to load settings — try refreshing'))
   }, [])
 
   async function save(patch: Record<string, unknown>) {
@@ -63,6 +64,8 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
     await clearData()
     onBack()
   }
+
+  if (error) return <div className="settings-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
 
   return (
     <div className="settings-page">
@@ -251,6 +254,7 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
   const [prefs, setPrefs] = useState<Preference[]>([])
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [thresholds, setThresholds] = useState<DecayThresholds>({})
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([getProfile(), listPreferences(), listHistory(), getSettings()]).then(
@@ -260,7 +264,7 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
         setHistory(h)
         setThresholds((s.decay_thresholds as DecayThresholds) ?? {})
       }
-    )
+    ).catch(() => setError('Failed to load — try refreshing'))
   }, [])
 
   async function saveField(field: string, value: string) {
@@ -284,6 +288,7 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
     historySummary[item.domain][item.status] = (historySummary[item.domain][item.status] ?? 0) + 1
   }
 
+  if (error) return <div className="info-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
   if (!profile) return <div className="info-page"><button className="back-btn" onClick={onBack}>← Back</button><p>Loading…</p></div>
 
   return (
@@ -353,15 +358,20 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
   const [items, setItems] = useState<HistoryItem[]>([])
   const [domain, setDomain] = useState('')
   const [status, setStatus] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    listHistory(domain || undefined, status || undefined).then(setItems)
+    listHistory(domain || undefined, status || undefined).then(setItems).catch(() =>
+      setError('Failed to load — try refreshing')
+    )
   }, [domain, status])
 
   async function handleDelete(id: string) {
     await deleteHistoryItem(id)
     setItems(prev => prev.filter(i => i.id !== id))
   }
+
+  if (error) return <div className="history-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
 
   return (
     <div className="history-page">
@@ -449,7 +459,10 @@ export default function App() {
         : []
     )
     setToolProgress([])
-    setMode('general')
+    // Preserve current mode; patch the session if it differs from the default 'general'
+    if (mode !== 'general') {
+      await patchSession(session.id, { mode })
+    }
     setPage('chat')
     return session.id
   }
@@ -458,6 +471,7 @@ export default function App() {
     setActiveId(id)
     setPage('chat')
     const r = await fetch(`/sessions/${id}/messages`)
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
     const msgs = await r.json()
     setMessages(
       msgs
@@ -511,6 +525,11 @@ export default function App() {
     })
 
     if (!resp.body) {
+      setMessages(prev => prev.filter(m => m.id !== assistantId))
+      setMessages(prev => [
+        ...prev,
+        { id: assistantId, role: 'assistant', content: 'Connection failed — try again.' },
+      ])
       setStreaming(false)
       return
     }
@@ -531,7 +550,13 @@ export default function App() {
         if (line.startsWith('event:')) {
           currentEvent = line.slice(6).trim()
         } else if (line.startsWith('data:')) {
-          const payload = JSON.parse(line.slice(5).trim())
+          let payload: Record<string, unknown>
+          try {
+            payload = JSON.parse(line.slice(5).trim()) as Record<string, unknown>
+          } catch (e) {
+            if (e instanceof SyntaxError) { console.warn('SSE parse error', line); continue }
+            throw e
+          }
           if (currentEvent === 'text_delta') {
             setMessages(prev =>
               prev.map(m =>
