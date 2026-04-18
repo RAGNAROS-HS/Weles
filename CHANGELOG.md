@@ -159,6 +159,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `get_all_settings()` and `get_setting()` no longer crash on corrupt JSON in the settings table — bad rows are skipped with a warning (#71)
 - `set_setting()` validates value types for user-configurable keys; raises `ValueError` on invalid input, which the settings router converts to HTTP 422 (#71)
 - Deleting a session now cascades to remove all its messages (FK constraint was already in schema; `PRAGMA foreign_keys = ON` was already in connection); in-memory session cache is also evicted on delete (#72)
+- Context compression now matches messages by ID instead of content; previously two messages with identical text could cause the wrong one to be overwritten (#73)
 
 ### v1.0 — Distribution
 
