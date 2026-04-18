@@ -155,6 +155,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 #### Fixed
 - Information tab content is now scrollable when it exceeds the viewport height; settings page receives the same fix (#68)
+- Tool call limit check now fires before the handler executes; counter checked with `>=` before increment so exactly `max_tool_calls_per_turn` calls are permitted (#70)
 
 ### v1.0 — Distribution
 
