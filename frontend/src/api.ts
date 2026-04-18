@@ -70,12 +70,32 @@ export async function clearData(): Promise<void> {
   if (!r.ok) throw new Error(`DELETE /data failed: ${r.status}`)
 }
 
-export async function listHistory(domain?: string, status?: string): Promise<HistoryItem[]> {
+export interface HistoryPage {
+  items: HistoryItem[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export async function listHistory(
+  domain?: string,
+  status?: string,
+  limit = 50,
+  offset = 0,
+): Promise<HistoryPage> {
   const params = new URLSearchParams()
   if (domain) params.set('domain', domain)
   if (status) params.set('status', status)
-  const query = params.toString()
-  const r = await fetch(`/history${query ? `?${query}` : ''}`)
+  params.set('limit', String(limit))
+  params.set('offset', String(offset))
+  const r = await fetch(`/history?${params.toString()}`)
+  return checkOk(r).json()
+}
+
+export async function getSessionMessages(sessionId: string, limit = 100, beforeId?: string): Promise<HistoryItem[]> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (beforeId) params.set('before_id', beforeId)
+  const r = await fetch(`/sessions/${sessionId}/messages?${params.toString()}`)
   return checkOk(r).json()
 }
 

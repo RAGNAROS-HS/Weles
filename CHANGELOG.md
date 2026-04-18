@@ -156,6 +156,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### Added
 - DB indices for `messages.session_id`, `history.domain`, `history.status`, `history.follow_up_due_at`, `history.check_in_due_at`, and `preferences.dimension` via Alembic migration `002_add_indices` (#75)
 - In-memory session cache replaced with an LRU cache capped at 50 sessions (configurable via `WELES_SESSION_CACHE_SIZE`); oldest session is evicted when the limit is exceeded (#76)
+- `GET /history` now returns a paginated envelope `{items, total, limit, offset}`; supports `limit` and `offset` query params (default 50/0) (#77)
+- `GET /sessions/{id}/messages` supports `limit` (default 100) and `before_id` cursor for loading older messages (#77)
+- History page shows "Load more" button when more items exist beyond the first page (#77)
+- Chat loads last 100 messages on session select; "Load older messages" button prepends the preceding 100 (#77)
 
 #### Fixed
 - Information tab content is now scrollable when it exceeds the viewport height; settings page receives the same fix (#68)

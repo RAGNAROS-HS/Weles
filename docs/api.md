@@ -102,7 +102,11 @@ event: error          data: {"message": "Claude API unavailable"}
 `tool_error` is non-fatal — stream continues. `error` terminates the stream.
 
 ### `GET /sessions/{id}/messages`
-Retrieve full message history for a session.
+Retrieve paginated message history for a session.
+
+**Query params** (all optional):
+- `limit`: max messages to return (default `100`)
+- `before_id`: cursor — return up to `limit` messages with `created_at` before this message ID, in chronological order
 
 **Response `200`** — array of:
 ```json
@@ -116,6 +120,9 @@ Retrieve full message history for a session.
   "created_at": "ISO datetime"
 }
 ```
+
+When `before_id` is not provided: returns the last `limit` messages chronologically.
+When `before_id` is provided: returns up to `limit` messages preceding that message ID.
 
 ---
 
@@ -147,13 +154,23 @@ Partial update. Updates `field_timestamps` atomically with each changed field.
 ## History
 
 ### `GET /history`
-List history items, most recent first.
+List history items, most recent first, with pagination.
 
 **Query params** (all optional):
 - `domain`: `shopping|diet|fitness|lifestyle`
 - `status`: `recommended|bought|tried|rated|skipped`
+- `limit`: items per page (default `50`)
+- `offset`: number of items to skip (default `0`)
 
-**Response `200`** — array of history items
+**Response `200`**:
+```json
+{
+  "items": [...],
+  "total": 75,
+  "limit": 50,
+  "offset": 0
+}
+```
 
 ### `DELETE /history/{id}`
 Delete a history item.
