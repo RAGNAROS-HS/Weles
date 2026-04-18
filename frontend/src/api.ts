@@ -1,13 +1,18 @@
 import type { HistoryItem, Mode, Preference, Session, UserProfile } from './types'
 
+function checkOk(r: Response): Response {
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return r
+}
+
 export async function createSession(): Promise<Session> {
   const r = await fetch('/sessions', { method: 'POST' })
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function listSessions(): Promise<Session[]> {
   const r = await fetch('/sessions')
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function deleteSession(id: string): Promise<void> {
@@ -20,12 +25,12 @@ export async function patchSession(id: string, patch: { title?: string; mode?: M
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function getSettings(): Promise<Record<string, unknown>> {
   const r = await fetch('/settings')
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function patchSettings(patch: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -34,12 +39,12 @@ export async function patchSettings(patch: Record<string, unknown>): Promise<Rec
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function getProfile(): Promise<UserProfile> {
   const r = await fetch('/profile')
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function patchProfile(patch: Record<string, unknown>): Promise<UserProfile> {
@@ -48,12 +53,12 @@ export async function patchProfile(patch: Record<string, unknown>): Promise<User
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function listPreferences(): Promise<Preference[]> {
   const r = await fetch('/preferences')
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function deletePreference(id: string): Promise<void> {
@@ -71,7 +76,7 @@ export async function listHistory(domain?: string, status?: string): Promise<His
   if (status) params.set('status', status)
   const query = params.toString()
   const r = await fetch(`/history${query ? `?${query}` : ''}`)
-  return r.json()
+  return checkOk(r).json()
 }
 
 export async function deleteHistoryItem(id: string): Promise<void> {
