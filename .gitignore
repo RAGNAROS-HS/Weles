@@ -31,6 +31,7 @@ dist/
 alembic/versions/*.py
 !alembic/versions/.gitkeep
 !alembic/versions/001_initial.py
+!alembic/versions/002_add_indices.py
 
 # Node
 frontend/node_modules/
@@ -51,3 +52,7 @@ Thumbs.db
 .ruff_cache/
 htmlcov/
 .coverage
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
