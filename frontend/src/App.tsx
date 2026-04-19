@@ -45,6 +45,11 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
   const [decayDraft, setDecayDraft] = useState<Record<string, number>>(DECAY_DEFAULTS)
   const [settingsLoaded, setSettingsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const confirmBtnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => { headingRef.current?.focus() }, [])
+  useEffect(() => { if (confirmClear) confirmBtnRef.current?.focus() }, [confirmClear])
 
   useEffect(() => {
     getSettings().then(s => {
@@ -72,12 +77,12 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
     onBack()
   }
 
-  if (error) return <div className="settings-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
+  if (error) return <div className="settings-page"><button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
 
   return (
     <div className="settings-page">
-      <button className="back-btn" onClick={onBack}>← Back</button>
-      <h1>Settings</h1>
+      <button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button>
+      <h1 ref={headingRef} tabIndex={-1}>Settings</h1>
 
       <section>
         <h2>Notifications</h2>
@@ -124,9 +129,9 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
       <section>
         <h2>Data</h2>
         {confirmClear ? (
-          <div className="confirm-modal">
-            <p>This will permanently delete all sessions, history, profile, and preferences. Cannot be undone.</p>
-            <button onClick={handleClearData}>Confirm</button>
+          <div className="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+            <p id="confirm-title">This will permanently delete all sessions, history, profile, and preferences. Cannot be undone.</p>
+            <button ref={confirmBtnRef} onClick={handleClearData}>Confirm</button>
             <button onClick={() => setConfirmClear(false)}>Cancel</button>
           </div>
         ) : (
@@ -262,6 +267,9 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [thresholds, setThresholds] = useState<DecayThresholds>({})
   const [error, setError] = useState<string | null>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => { headingRef.current?.focus() }, [])
 
   useEffect(() => {
     Promise.all([getProfile(), listPreferences(), listHistory(), getSettings()]).then(
@@ -295,13 +303,13 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
     historySummary[item.domain][item.status] = (historySummary[item.domain][item.status] ?? 0) + 1
   }
 
-  if (error) return <div className="info-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
-  if (!profile) return <div className="info-page"><button className="back-btn" onClick={onBack}>← Back</button><p>Loading…</p></div>
+  if (error) return <div className="info-page"><button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
+  if (!profile) return <div className="info-page"><button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button><p>Loading…</p></div>
 
   return (
     <div className="info-page">
-      <button className="back-btn" onClick={onBack}>← Back</button>
-      <h1>Information</h1>
+      <button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button>
+      <h1 ref={headingRef} tabIndex={-1}>Information</h1>
 
       {INFO_SECTIONS.map(section => (
         <section key={section.title} className="info-section">
@@ -329,7 +337,7 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
               <span className="info-pref-value">{pref.value}</span>
               {pref.reason && <span className="info-pref-reason">{pref.reason}</span>}
               <span className={`info-pref-source source-${pref.source}`}>{pref.source}</span>
-              <button className="del-btn" onClick={() => handleDeletePref(pref.id)}>×</button>
+              <button className="del-btn" aria-label="Remove preference" onClick={() => handleDeletePref(pref.id)}>×</button>
             </div>
           ))
         }
@@ -368,7 +376,10 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
   const [domain, setDomain] = useState('')
   const [status, setStatus] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
   const LIMIT = 50
+
+  useEffect(() => { headingRef.current?.focus() }, [])
 
   useEffect(() => {
     setItems([])
@@ -393,12 +404,12 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
     setTotal(prev => prev - 1)
   }
 
-  if (error) return <div className="history-page"><button className="back-btn" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
+  if (error) return <div className="history-page"><button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button><p className="page-error">{error}</p></div>
 
   return (
     <div className="history-page">
-      <button className="back-btn" onClick={onBack}>← Back</button>
-      <h1>History</h1>
+      <button className="back-btn" aria-label="Back to chat" onClick={onBack}>← Back</button>
+      <h1 ref={headingRef} tabIndex={-1}>History</h1>
       <div className="history-filters">
         <label>
           Domain
@@ -437,7 +448,7 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
                   <td>{item.status}</td>
                   <td>{item.rating != null ? `${item.rating}/5` : '—'}</td>
                   <td>{item.created_at.slice(0, 10)}</td>
-                  <td><button className="del-btn" onClick={() => handleDelete(item.id)}>×</button></td>
+                  <td><button className="del-btn" aria-label="Delete history item" onClick={() => handleDelete(item.id)}>×</button></td>
                 </tr>
               ))}
             </tbody>
@@ -654,16 +665,19 @@ export default function App() {
     <div className="layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        <button className="new-chat-btn" onClick={newChat}>+ New chat</button>
+        <button className="new-chat-btn" aria-label="New chat" onClick={newChat}>+ New chat</button>
         <nav className="session-list">
           {sessions.map(s => (
             <div
               key={s.id}
               className={`session-item${s.id === activeId ? ' active' : ''}`}
+              role="button"
+              tabIndex={0}
               onClick={() => selectSession(s.id)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSession(s.id) } }}
             >
               <span className="session-title">{s.title ?? s.preview ?? 'New chat'}</span>
-              <button className="del-btn" onClick={e => removeSession(s.id, e)}>×</button>
+              <button className="del-btn" aria-label="Delete session" onClick={e => removeSession(s.id, e)}>×</button>
             </div>
           ))}
         </nav>
@@ -728,7 +742,9 @@ export default function App() {
 
         {/* Input */}
         <div className="input-bar">
+          <label htmlFor="chat-input" className="sr-only">Message</label>
           <textarea
+            id="chat-input"
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}

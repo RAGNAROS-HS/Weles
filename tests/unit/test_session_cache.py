@@ -1,4 +1,5 @@
 """Tests for LRU session cache in messages router."""
+
 import pytest
 
 import weles.api.routers.messages as messages_mod
