@@ -1,4 +1,4 @@
-import type { HistoryItem, Mode, Preference, Session, Settings, UserProfile } from './types'
+import type { HistoryItem, Message, Mode, Preference, Session, Settings, UserProfile } from './types'
 
 function checkOk(r: Response): Response {
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -97,7 +97,7 @@ export async function listHistory(
   return checkOk(r).json()
 }
 
-export async function getSessionMessages(sessionId: string, limit = 100, beforeId?: string): Promise<HistoryItem[]> {
+export async function getSessionMessages(sessionId: string, limit = 100, beforeId?: string): Promise<Message[]> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (beforeId) params.set('before_id', beforeId)
   const r = await fetch(`/sessions/${sessionId}/messages?${params.toString()}`)
@@ -108,4 +108,4 @@ export async function deleteHistoryItem(id: string): Promise<void> {
   await fetch(`/history/${id}`, { method: 'DELETE' })
 }
 
-export type { HistoryItem, Preference, Settings, UserProfile } from './types'
+export type { HistoryItem, Message, Preference, Settings, UserProfile } from './types'

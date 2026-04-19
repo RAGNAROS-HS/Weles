@@ -90,7 +90,7 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
           Follow-up cadence
           <select
             value={String(settings.follow_up_cadence ?? 'off')}
-            onChange={e => save({ follow_up_cadence: e.target.value })}
+            onChange={e => save({ follow_up_cadence: e.target.value as 'weekly' | 'monthly' | 'off' })}
           >
             <option value="off">Off</option>
             <option value="weekly">Weekly</option>
@@ -718,24 +718,24 @@ export default function App() {
                 )
               )
             } else if (currentEvent === 'tool_start') {
-              setToolProgress(prev => [...prev, { tool: payload.tool, status: 'running', description: payload.description }])
+              setToolProgress(prev => [...prev, { tool: payload.tool as string, status: 'running', description: payload.description as string }])
             } else if (currentEvent === 'tool_end') {
               setToolProgress(prev =>
                 prev.map(t => t.tool === payload.tool ? {
                   ...t,
-                  status: 'done',
-                  summary: payload.result_summary,
+                  status: 'done' as const,
+                  summary: payload.result_summary as string,
                   ...(payload.field != null ? { field: payload.field as string } : {}),
                   ...(payload.value != null ? { value: payload.value as string } : {}),
                 } : t)
               )
             } else if (currentEvent === 'tool_error') {
               setToolProgress(prev =>
-                prev.map(t => t.tool === payload.tool ? { ...t, status: 'error', error: payload.error } : t)
+                prev.map(t => t.tool === payload.tool ? { ...t, status: 'error' as const, error: payload.error as string } : t)
               )
             } else if (currentEvent === 'done') {
               setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, streaming: false } : m))
-              setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title: payload.title } : s))
+              setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title: payload.title as string | null } : s))
             } else if (currentEvent === 'error') {
               setMessages(prev =>
                 prev.map(m =>
