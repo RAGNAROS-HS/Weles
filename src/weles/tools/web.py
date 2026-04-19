@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Any, TypedDict
 from urllib.parse import urlparse
@@ -7,6 +8,8 @@ import httpx
 from weles.agent.dispatch import ToolResult
 from weles.utils.paths import resource_path
 
+logger = logging.getLogger(__name__)
+
 
 def _get_user_country() -> str | None:
     """Return the user's country from the profile, or None."""
@@ -15,6 +18,7 @@ def _get_user_country() -> str | None:
 
         return get_profile().country
     except Exception:
+        logger.warning("Failed to fetch user profile for country lookup", exc_info=True)
         return None
 
 

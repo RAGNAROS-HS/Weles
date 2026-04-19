@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
+import anthropic
 import pytest
 
 from weles.agent.compression import maybe_compress_context
@@ -118,3 +119,41 @@ async def test_compression_uses_id_not_content(tmp_db: object) -> None:
     ).fetchone()
     assert pair2_user["is_compressed"] == 0
     assert pair2_user["content"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
+    """Compression task continues and logs ERROR when APITimeoutError is raised."""
+    from unittest.mock import patch
+
+    from weles.db.connection import get_db
+
+    conn = get_db()
+    session_id = str(uuid.uuid4())
+    conn.execute(
+        "INSERT INTO sessions (id, title, mode, created_at) VALUES (?, NULL, 'general', ?)",
+        (session_id, datetime.utcnow()),
+    )
+    conn.commit()
+
+    pairs = [("question", "answer")] * 10
+    ids = _insert_messages(conn, session_id, pairs)
+
+    session = _make_session_from_db(session_id)
+
+    mock_client = MagicMock()
+    mock_client.messages.create.side_effect = anthropic.APITimeoutError(request=MagicMock())
+
+    with (
+        patch("weles.agent.compression.needs_compression", return_value=True),
+        patch("weles.agent.compression.logger") as mock_logger,
+    ):
+        await maybe_compress_context(session_id, mock_client, session)
+
+    mock_logger.error.assert_called()
+    call_args = mock_logger.error.call_args_list
+    assert any("timed out" in str(args[0]) for args, _ in call_args)
+    first_msg = conn.execute(
+        "SELECT is_compressed FROM messages WHERE id = ?", (ids[0],)
+    ).fetchone()
+    assert first_msg["is_compressed"] == 0
