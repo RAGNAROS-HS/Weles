@@ -18,6 +18,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Compression API call now has a 30 s timeout; `APITimeoutError` is caught separately from generic exceptions; both log at ERROR with traceback (#81)
 - QC search failures in `session_start.py` now log at ERROR instead of WARNING (#81)
 - `_get_user_country()` in `web.py` now logs a WARNING when profile fetch fails (#81)
+- Prompt and config files (`system.md`, mode prompts, `research.md`, `programs.toml`) are now cached at module load; `build_system_prompt()` and `stream_response()` make zero blocking file reads per request (#92)
 
 ### v0.1 — Skeleton
 

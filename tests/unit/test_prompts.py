@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from weles.agent.prompts import build_system_prompt
@@ -30,3 +32,10 @@ def test_non_empty_profile_adds_third_block() -> None:
 def test_empty_profile_does_not_add_third_block() -> None:
     blocks = build_system_prompt("shopping", UserProfile(), [])
     assert len(blocks) == 2
+
+
+def test_build_system_prompt_does_not_read_files_on_repeated_calls() -> None:
+    with patch("pathlib.Path.read_text") as mock_read:
+        build_system_prompt("shopping", None, [])
+        build_system_prompt("diet", None, [])
+    mock_read.assert_not_called()
