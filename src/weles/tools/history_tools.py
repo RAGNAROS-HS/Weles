@@ -11,10 +11,12 @@ ADD_TO_HISTORY_SCHEMA: dict[str, Any] = {
     "properties": {
         "item_name": {
             "type": "string",
+            "maxLength": 200,
             "description": "Name of the item (e.g. 'Red Wing 875', 'creatine monohydrate').",
         },
         "category": {
             "type": "string",
+            "maxLength": 200,
             "description": "Item category (e.g. footwear, supplement, exercise).",
         },
         "domain": {
@@ -35,6 +37,7 @@ ADD_TO_HISTORY_SCHEMA: dict[str, Any] = {
         },
         "notes": {
             "type": "string",
+            "maxLength": 1000,
             "description": "Optional notes about the item.",
         },
     },

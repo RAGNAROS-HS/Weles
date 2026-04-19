@@ -7,6 +7,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### v1.1 — Hardening
+
+#### Fixed
+- `POST /sessions/{id}/messages` now rejects payloads with `content` exceeding 32,000 chars with HTTP 422 (#78)
+- Tool string inputs (item_name, category, notes, value, reason, query) are bounded by `maxLength` in JSON Schema and silently truncated in `dispatch.py` as a safety net (#78)
+
 ### v0.1 — Skeleton
 
 #### Added

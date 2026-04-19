@@ -158,7 +158,7 @@ async def search_reddit(
 SEARCH_REDDIT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
-        "query": {"type": "string", "description": "Search query."},
+        "query": {"type": "string", "maxLength": 500, "description": "Search query."},
         "subcategory": {
             "type": "string",
             "description": (

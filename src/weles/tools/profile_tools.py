@@ -34,6 +34,7 @@ SAVE_PROFILE_FIELD_SCHEMA: dict[str, Any] = {
         },
         "value": {
             "type": "string",
+            "maxLength": 500,
             "description": "New value for the field.",
         },
     },
@@ -65,10 +66,12 @@ UPDATE_PREFERENCE_SCHEMA: dict[str, Any] = {
         },
         "value": {
             "type": "string",
+            "maxLength": 1000,
             "description": "Preference value (e.g. 'No minimalist styles', 'Avoids whey protein').",
         },
         "reason": {
             "type": "string",
+            "maxLength": 1000,
             "description": "Optional: what the user said or did that prompted this preference.",
         },
     },
