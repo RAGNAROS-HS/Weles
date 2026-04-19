@@ -12,6 +12,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### Fixed
 - `POST /sessions/{id}/messages` now rejects payloads with `content` exceeding 32,000 chars with HTTP 422 (#78)
 - Tool string inputs (item_name, category, notes, value, reason, query) are bounded by `maxLength` in JSON Schema and silently truncated in `dispatch.py` as a safety net (#78)
+- History and preference context blocks are wrapped in `<untrusted_data>` tags; system prompt instructs Claude to treat them as data, never as instructions (#79)
+- Newlines stripped from `item_name`, `category`, and `notes` at write time in `add_to_history_handler` (#79)
 
 ### v0.1 — Skeleton
 
