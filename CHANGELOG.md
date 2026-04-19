@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- Profile conflict resolution instruction added to `system.md`: agent treats explicit user self-reports as authoritative and immediately calls `save_profile_field` (#88)
 - `Ctrl+N` / `Cmd+N` keyboard shortcut to start a new chat from anywhere in the app (suppressed when focus is in chat textarea) (#87)
 - `GET /export` endpoint: JSON export (default) or ZIP of three CSVs (`format=csv`); both served as browser downloads (#86)
 - Settings page: "Export data" section with "Export as JSON" and "Export as CSV" buttons (#86)
