@@ -499,12 +499,23 @@ export default function App() {
   const [toolsExpanded, setToolsExpanded] = useState(false)
   const [page, setPage] = useState<'chat' | 'settings' | 'info' | 'history'>('chat')
   const [mode, setMode] = useState<Mode>('general')
+  const [sessionSearchInput, setSessionSearchInput] = useState('')
+  const [sessionSearch, setSessionSearch] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     listSessions().then(setSessions)
   }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => setSessionSearch(sessionSearchInput), 300)
+    return () => clearTimeout(t)
+  }, [sessionSearchInput])
+
+  useEffect(() => {
+    listSessions(sessionSearch || undefined).then(setSessions)
+  }, [sessionSearch])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -691,20 +702,31 @@ export default function App() {
       {/* Sidebar */}
       <aside className="sidebar">
         <button className="new-chat-btn" aria-label="New chat" onClick={newChat}>+ New chat</button>
+        <input
+          type="search"
+          className="session-search"
+          placeholder="Search sessions…"
+          aria-label="Search sessions"
+          value={sessionSearchInput}
+          onChange={e => setSessionSearchInput(e.target.value)}
+        />
         <nav className="session-list">
-          {sessions.map(s => (
-            <div
-              key={s.id}
-              className={`session-item${s.id === activeId ? ' active' : ''}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => selectSession(s.id)}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSession(s.id) } }}
-            >
-              <span className="session-title">{s.title ?? s.preview ?? 'New chat'}</span>
-              <button className="del-btn" aria-label="Delete session" onClick={e => removeSession(s.id, e)}>×</button>
-            </div>
-          ))}
+          {sessions.length === 0 && sessionSearch
+            ? <p className="session-empty">No sessions match</p>
+            : sessions.map(s => (
+              <div
+                key={s.id}
+                className={`session-item${s.id === activeId ? ' active' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => selectSession(s.id)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSession(s.id) } }}
+              >
+                <span className="session-title">{s.title ?? s.preview ?? 'New chat'}</span>
+                <button className="del-btn" aria-label="Delete session" onClick={e => removeSession(s.id, e)}>×</button>
+              </div>
+            ))
+          }
         </nav>
         <div className="sidebar-links">
           <button onClick={() => setPage('info')}>Information</button>

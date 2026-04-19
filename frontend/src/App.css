@@ -51,6 +51,17 @@ body {
 }
 .new-chat-btn:hover { background: #333; }
 
+.session-search {
+  background: #1a1a1a;
+  border: 1px solid #2e2e2e;
+  color: #e8e8e8;
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: 12px;
+  width: 100%;
+}
+.session-search::placeholder { color: #555; }
+
 .session-list {
   flex: 1;
   overflow-y: auto;
@@ -58,6 +69,8 @@ body {
   flex-direction: column;
   gap: 2px;
 }
+
+.session-empty { color: #555; font-size: 12px; padding: 6px 8px; font-style: italic; }
 
 .session-item {
   display: flex;
