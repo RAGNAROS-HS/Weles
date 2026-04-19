@@ -94,21 +94,22 @@ async def test_compression_uses_id_not_content(tmp_db: object) -> None:
     # ids[1] = pair0 assistant "sure"
     # ids[4] = pair2 user "ok" (must NOT be compressed)
 
-    session = _make_session_from_db(session_id)
-
     mock_response = MagicMock()
     mock_response.content = [MagicMock(text="Summary of the exchange.")]
     mock_client = MagicMock()
     mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-    # Force compression to fire regardless of token count; pin get_db to the test
-    # connection so async thread isolation doesn't cause a stale-conn miss on Linux.
+    # Pin get_db everywhere so the async thread always uses the same connection as
+    # the test body — pytest-asyncio 1.x on Linux can run async tests in a different
+    # thread whose threading.local() has no cached connection.
     from unittest.mock import patch
 
     with (
-        patch("weles.agent.compression.needs_compression", return_value=True),
+        patch("weles.db.connection.get_db", return_value=conn),
         patch("weles.agent.compression.get_db", return_value=conn),
+        patch("weles.agent.compression.needs_compression", return_value=True),
     ):
+        session = _make_session_from_db(session_id)
         await maybe_compress_context(session_id, mock_client, session)
 
     # pair0 user "ok" should be compressed
@@ -144,22 +145,20 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
     pairs = [("question", "answer")] * 10
     ids = _insert_messages(conn, session_id, pairs)
 
-    session = _make_session_from_db(session_id)
-
     mock_client = MagicMock()
     mock_client.messages.create = AsyncMock(
         side_effect=anthropic.APITimeoutError(request=MagicMock())
     )
 
     with (
-        patch("weles.agent.compression.needs_compression", return_value=True),
+        patch("weles.db.connection.get_db", return_value=conn),
         patch("weles.agent.compression.get_db", return_value=conn),
+        patch("weles.agent.compression.needs_compression", return_value=True),
         patch("weles.agent.compression.logger") as mock_logger,
     ):
+        session = _make_session_from_db(session_id)
         await maybe_compress_context(session_id, mock_client, session)
 
-    # error must be logged (either "timed out" or generic fallback is acceptable —
-    # what matters is that the function does NOT crash and logs the problem)
     mock_logger.error.assert_called()
     first_msg = conn.execute(
         "SELECT is_compressed FROM messages WHERE id = ?", (ids[0],)
