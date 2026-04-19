@@ -48,6 +48,8 @@ async def maybe_compress_context(
     loop = asyncio.get_event_loop()
     conn = get_db()
 
+    # Phase 1: summarise all pairs, collecting (msg_dict, compressed_text) without mutating yet
+    updates: list[tuple[dict[str, Any], dict[str, Any], str]] = []
     i = 0
     while i < len(candidates) - 1:
         u = candidates[i]
@@ -83,20 +85,29 @@ async def maybe_compress_context(
                 i += 2
                 continue
 
-            compressed = f"[Compressed] {summary}"
-            u["content"] = compressed
-            u["is_compressed"] = True
-            a["content"] = compressed
-            a["is_compressed"] = True
-            conn.execute(
-                "UPDATE messages SET content = ?, is_compressed = 1 WHERE id = ?",
-                (compressed, u["id"]),
-            )
-            conn.execute(
-                "UPDATE messages SET content = ?, is_compressed = 1 WHERE id = ?",
-                (compressed, a["id"]),
-            )
+            updates.append((u, a, f"[Compressed] {summary}"))
             i += 2
         else:
             i += 1
+
+    if not updates:
+        return
+
+    # Phase 2: write to DB and commit — in-memory state is untouched until after commit
+    for u, a, compressed in updates:
+        conn.execute(
+            "UPDATE messages SET content = ?, is_compressed = 1 WHERE id = ?",
+            (compressed, u["id"]),
+        )
+        conn.execute(
+            "UPDATE messages SET content = ?, is_compressed = 1 WHERE id = ?",
+            (compressed, a["id"]),
+        )
     conn.commit()
+
+    # Phase 3: update in-memory state only after successful commit
+    for u, a, compressed in updates:
+        u["content"] = compressed
+        u["is_compressed"] = True
+        a["content"] = compressed
+        a["is_compressed"] = True
