@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from typing import Any
 
@@ -7,6 +8,8 @@ from anthropic.types import TextBlock
 
 from weles.agent.session import CONTEXT_WINDOW, Session, estimated_tokens
 from weles.db.connection import get_db
+
+logger = logging.getLogger(__name__)
 
 _PROTECTED_TAIL = 10  # last N messages are never compressed
 
@@ -64,13 +67,19 @@ async def maybe_compress_context(
                     model=model,
                     max_tokens=256,
                     messages=[{"role": "user", "content": p}],
+                    timeout=30.0,
                 )
 
             try:
                 resp = await loop.run_in_executor(None, _call)
                 first = resp.content[0] if resp.content else None
                 summary = first.text if isinstance(first, TextBlock) else f"{u_text} / {a_text}"
+            except anthropic.APITimeoutError:
+                logger.error("Compression timed out for session %s", session_id, exc_info=True)
+                i += 2
+                continue
             except Exception:
+                logger.error("Compression failed for session %s", session_id, exc_info=True)
                 i += 2
                 continue
 

@@ -189,7 +189,7 @@ async def run_proactive_checks(
                 limit=5,
             )
         except Exception:
-            logger.warning("QC search failed for %s", item_name)
+            logger.error("QC search failed for %s", item_name, exc_info=True)
             continue
 
         found = False
