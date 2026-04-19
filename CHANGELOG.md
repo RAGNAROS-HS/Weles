@@ -23,6 +23,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- `GET /sessions` accepts `search` param; filters by case-insensitive title substring; sessions with `null` title excluded (#85)
+- Sidebar: session search input with 300ms debounce; shows "No sessions match" when search returns empty (#85)
 - `GET /history` accepts `search` (case-insensitive substring on `item_name`) and `sort` (`newest`|`oldest`) query params (#84)
 - History page: search-by-name input (300ms debounce) and sort dropdown; composes with existing domain/status filters (#84)
 

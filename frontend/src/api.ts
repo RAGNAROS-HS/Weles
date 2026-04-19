@@ -10,8 +10,9 @@ export async function createSession(): Promise<Session> {
   return checkOk(r).json()
 }
 
-export async function listSessions(): Promise<Session[]> {
-  const r = await fetch('/sessions')
+export async function listSessions(search?: string): Promise<Session[]> {
+  const url = search ? `/sessions?search=${encodeURIComponent(search)}` : '/sessions'
+  const r = await fetch(url)
   return checkOk(r).json()
 }
 
