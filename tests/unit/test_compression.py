@@ -63,8 +63,12 @@ def _make_session_from_db(session_id: str) -> Session:
 @pytest.mark.asyncio
 async def test_compression_uses_id_not_content(tmp_db: object) -> None:
     """When two user messages have identical text, only the first is compressed."""
-    from weles.db.connection import get_db
+    from weles.db.connection import _local, get_db
 
+    # pytest-asyncio 1.x on Linux may run the async body on a different OS thread
+    # than the sync fixture, leaving a stale thread-local connection. Reset it so
+    # get_db() opens a fresh connection to the tmp DB.
+    _local.conn = None
     conn = get_db()
 
     # Create a session
@@ -94,22 +98,16 @@ async def test_compression_uses_id_not_content(tmp_db: object) -> None:
     # ids[1] = pair0 assistant "sure"
     # ids[4] = pair2 user "ok" (must NOT be compressed)
 
+    session = _make_session_from_db(session_id)
+
     mock_response = MagicMock()
     mock_response.content = [MagicMock(text="Summary of the exchange.")]
     mock_client = MagicMock()
     mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-    # Pin get_db everywhere so the async thread always uses the same connection as
-    # the test body — pytest-asyncio 1.x on Linux can run async tests in a different
-    # thread whose threading.local() has no cached connection.
     from unittest.mock import patch
 
-    with (
-        patch("weles.db.connection.get_db", return_value=conn),
-        patch("weles.agent.compression.get_db", return_value=conn),
-        patch("weles.agent.compression.needs_compression", return_value=True),
-    ):
-        session = _make_session_from_db(session_id)
+    with patch("weles.agent.compression.needs_compression", return_value=True):
         await maybe_compress_context(session_id, mock_client, session)
 
     # pair0 user "ok" should be compressed
@@ -132,8 +130,9 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
     """Compression task continues and logs ERROR when APITimeoutError is raised."""
     from unittest.mock import patch
 
-    from weles.db.connection import get_db
+    from weles.db.connection import _local, get_db
 
+    _local.conn = None
     conn = get_db()
     session_id = str(uuid.uuid4())
     conn.execute(
@@ -144,6 +143,7 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
 
     pairs = [("question", "answer")] * 10
     ids = _insert_messages(conn, session_id, pairs)
+    session = _make_session_from_db(session_id)
 
     mock_client = MagicMock()
     mock_client.messages.create = AsyncMock(
@@ -151,12 +151,9 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
     )
 
     with (
-        patch("weles.db.connection.get_db", return_value=conn),
-        patch("weles.agent.compression.get_db", return_value=conn),
         patch("weles.agent.compression.needs_compression", return_value=True),
         patch("weles.agent.compression.logger") as mock_logger,
     ):
-        session = _make_session_from_db(session_id)
         await maybe_compress_context(session_id, mock_client, session)
 
     mock_logger.error.assert_called()
@@ -171,8 +168,9 @@ async def test_db_failure_leaves_in_memory_state_unchanged(tmp_db: object) -> No
     """If a DB execute raises after first update, in-memory messages must be unchanged."""
     from unittest.mock import patch
 
-    from weles.db.connection import get_db
+    from weles.db.connection import _local, get_db
 
+    _local.conn = None
     conn = get_db()
     session_id = str(uuid.uuid4())
     conn.execute(
