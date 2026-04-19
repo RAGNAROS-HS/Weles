@@ -1,5 +1,6 @@
 """Tests for context compression — specifically that updates target rows by ID."""
 
+import contextlib
 import uuid
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
@@ -157,3 +158,56 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
         "SELECT is_compressed FROM messages WHERE id = ?", (ids[0],)
     ).fetchone()
     assert first_msg["is_compressed"] == 0
+
+
+@pytest.mark.asyncio
+async def test_db_failure_leaves_in_memory_state_unchanged(tmp_db: object) -> None:
+    """If a DB execute raises after first update, in-memory messages must be unchanged."""
+    from unittest.mock import patch
+
+    from weles.db.connection import get_db
+
+    conn = get_db()
+    session_id = str(uuid.uuid4())
+    conn.execute(
+        "INSERT INTO sessions (id, title, mode, created_at) VALUES (?, NULL, 'general', ?)",
+        (session_id, datetime.utcnow()),
+    )
+    conn.commit()
+
+    pairs = [("question", "answer")] * 10
+    _insert_messages(conn, session_id, pairs)
+    session = _make_session_from_db(session_id)
+
+    original_contents = [m["content"] for m in session.messages]
+    original_compressed = [m["is_compressed"] for m in session.messages]
+
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text="Summary.")]
+    mock_client = MagicMock()
+    mock_client.messages.create.return_value = mock_response
+
+    call_count = 0
+
+    def execute_side_effect(sql: str, params: tuple = ()) -> object:  # type: ignore[misc]
+        nonlocal call_count
+        if "UPDATE messages" in sql:
+            call_count += 1
+            if call_count >= 2:
+                raise RuntimeError("DB error")
+        return conn.execute(sql, params)
+
+    with (
+        patch("weles.agent.compression.needs_compression", return_value=True),
+        patch("weles.agent.compression.get_db") as mock_get_db,
+    ):
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = execute_side_effect
+        mock_get_db.return_value = mock_conn
+
+        with contextlib.suppress(RuntimeError):
+            await maybe_compress_context(session_id, mock_client, session)
+
+    # In-memory state must be unchanged since commit never happened
+    assert [m["content"] for m in session.messages] == original_contents
+    assert [m["is_compressed"] for m in session.messages] == original_compressed
