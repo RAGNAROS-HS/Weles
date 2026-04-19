@@ -116,7 +116,7 @@ async def search_web(query: str, limit: int = 8) -> list[WebResult]:
 SEARCH_WEB_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
-        "query": {"type": "string", "description": "Search query."},
+        "query": {"type": "string", "maxLength": 500, "description": "Search query."},
         "limit": {
             "type": "integer",
             "default": 8,

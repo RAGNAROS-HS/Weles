@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from weles.agent.client import get_client
@@ -96,7 +96,7 @@ def evict_session(session_id: str) -> None:
 
 
 class MessageBody(BaseModel):
-    content: str
+    content: str = Field(..., max_length=32_000)
 
 
 def _get_session(session_id: str) -> dict[str, Any]:
