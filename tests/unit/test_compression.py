@@ -143,7 +143,9 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
     session = _make_session_from_db(session_id)
 
     mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(side_effect=anthropic.APITimeoutError(request=MagicMock()))
+    mock_client.messages.create = AsyncMock(
+        side_effect=anthropic.APITimeoutError(request=MagicMock())
+    )
 
     with (
         patch("weles.agent.compression.needs_compression", return_value=True),

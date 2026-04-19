@@ -35,9 +35,9 @@ async def test_empty_history_yields_error_event(tmp_db, mocker) -> None:
         ) as r:
             for line in r.iter_lines():
                 if line.startswith("data:"):
-                    events.append(json.loads(line[len("data:"):].strip()))
+                    events.append(json.loads(line[len("data:") :].strip()))
                 elif line.startswith("event:"):
-                    events.append({"_event": line[len("event:"):].strip()})
+                    events.append({"_event": line[len("event:") :].strip()})
 
     error_events = [e for e in events if e.get("message") == "No messages found for session"]
     assert len(error_events) == 1
