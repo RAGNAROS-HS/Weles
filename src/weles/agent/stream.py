@@ -50,7 +50,7 @@ class DoneEvent:
 AgentEvent = TextDeltaEvent | ToolStartEvent | ToolEndEvent | ToolErrorEvent | DoneEvent
 
 _RESEARCH_TOOLS = {"search_reddit", "search_web"}
-_RESEARCH_PROMPT_PATH = "src/weles/prompts/research.md"
+_RESEARCH_GUIDANCE: str = resource_path("src/weles/prompts/research.md").read_text(encoding="utf-8")
 
 
 def _build_description(tool_name: str, tool_input: dict[str, Any]) -> str:
@@ -176,8 +176,7 @@ async def stream_response(
         user_content: list[dict[str, Any]] = list(tool_results)
 
         if not research_guidance_injected and any(t.name in _RESEARCH_TOOLS for t in tool_uses):
-            guidance = resource_path(_RESEARCH_PROMPT_PATH).read_text(encoding="utf-8")
-            user_content.append({"type": "text", "text": guidance})
+            user_content.append({"type": "text", "text": _RESEARCH_GUIDANCE})
             research_guidance_injected = True
 
         failure_msg = _build_failure_message(failed_tools)
