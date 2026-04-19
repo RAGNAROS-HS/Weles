@@ -20,6 +20,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `_get_user_country()` in `web.py` now logs a WARNING when profile fetch fails (#81)
 - Prompt and config files (`system.md`, mode prompts, `research.md`, `programs.toml`) are now cached at module load; `build_system_prompt()` and `stream_response()` make zero blocking file reads per request (#92)
 
+### v1.2 — UX
+
+#### Changed
+- Defined `Settings` interface in `types.ts`; `getSettings()` and `patchSettings()` are now fully typed; settings state in `SettingsPage` uses `Settings` instead of `Record<string, unknown>` (#82)
+- Added `[key: string]: unknown` index signature to `UserProfile`; removed double `as unknown as Record<string, string | null>` cast in `InformationPage` (#82)
+
 ### v0.1 — Skeleton
 
 #### Added

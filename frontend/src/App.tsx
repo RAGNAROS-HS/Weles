@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { clearData, createSession, deleteHistoryItem, deletePreference, deleteSession, getProfile, getSessionMessages, getSettings, listHistory, listPreferences, listSessions, patchProfile, patchSession, patchSettings } from './api'
-import type { ChatMessage, HistoryItem, Mode, Preference, Session, ToolProgress, UserProfile } from './types'
+import type { ChatMessage, HistoryItem, Mode, Preference, Session, Settings, ToolProgress, UserProfile } from './types'
 import './App.css'
 
 const MODES: Mode[] = ['general', 'shopping', 'diet', 'fitness', 'lifestyle']
@@ -32,8 +32,15 @@ const DECAY_DEFAULTS: Record<string, number> = {
   taste_lifestyle: 365,
 }
 
+const DEFAULT_SETTINGS: Settings = {
+  follow_up_cadence: 'off',
+  proactive_surfacing: 'false',
+  max_tool_calls_per_turn: 6,
+  decay_thresholds: {},
+}
+
 function SettingsPage({ onBack }: { onBack: () => void }) {
-  const [settings, setSettings] = useState<Record<string, unknown>>({})
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [confirmClear, setConfirmClear] = useState(false)
   const [decayDraft, setDecayDraft] = useState<Record<string, number>>(DECAY_DEFAULTS)
   const [settingsLoaded, setSettingsLoaded] = useState(false)
@@ -42,13 +49,13 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     getSettings().then(s => {
       setSettings(s)
-      const fromServer = (s.decay_thresholds as Record<string, number>) ?? {}
+      const fromServer = s.decay_thresholds ?? {}
       setDecayDraft({ ...DECAY_DEFAULTS, ...fromServer })
       setSettingsLoaded(true)
     }).catch(() => setError('Failed to load settings — try refreshing'))
   }, [])
 
-  async function save(patch: Record<string, unknown>) {
+  async function save(patch: Partial<Settings>) {
     const updated = await patchSettings(patch)
     setSettings(updated)
   }
@@ -56,7 +63,7 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
   async function saveDecay() {
     const updated = await patchSettings({ decay_thresholds: decayDraft })
     setSettings(updated)
-    const fromServer = (updated.decay_thresholds as Record<string, number>) ?? {}
+    const fromServer = updated.decay_thresholds ?? {}
     setDecayDraft({ ...DECAY_DEFAULTS, ...fromServer })
   }
 
@@ -92,8 +99,8 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
         <label>
           <input
             type="checkbox"
-            checked={settings.proactive_surfacing === 'true' || settings.proactive_surfacing === true}
-            onChange={e => save({ proactive_surfacing: String(e.target.checked) })}
+            checked={settings.proactive_surfacing === 'true'}
+            onChange={e => save({ proactive_surfacing: (String(e.target.checked) as 'true' | 'false') })}
           />
           Suggest relevant information proactively
         </label>
@@ -262,7 +269,7 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
         setProfile(p)
         setPrefs(pr)
         setHistory(hPage.items)
-        setThresholds((s.decay_thresholds as DecayThresholds) ?? {})
+        setThresholds(s.decay_thresholds ?? {})
       }
     ).catch(() => setError('Failed to load — try refreshing'))
   }, [])
@@ -303,7 +310,7 @@ function InformationPage({ onBack, onGoHistory }: { onBack: () => void; onGoHist
             <ProfileField
               key={field}
               field={field}
-              value={(profile as unknown as Record<string, string | null>)[field]}
+              value={profile[field] as string | null}
               timestamp={timestamps[field] ?? null}
               stale={isStale(field, timestamps, thresholds)}
               onSave={saveField}

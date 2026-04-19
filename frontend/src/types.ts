@@ -1,5 +1,12 @@
 export type Mode = 'general' | 'shopping' | 'diet' | 'fitness' | 'lifestyle'
 
+export interface Settings {
+  follow_up_cadence: 'weekly' | 'monthly' | 'off'
+  proactive_surfacing: 'true' | 'false'
+  max_tool_calls_per_turn: number
+  decay_thresholds: Record<string, number>
+}
+
 export interface Session {
   id: string
   title: string | null
@@ -33,6 +40,7 @@ export interface ChatMessage {
 }
 
 export interface UserProfile {
+  [key: string]: unknown
   id: number | null
   height_cm: number | null
   weight_kg: number | null
