@@ -16,6 +16,8 @@ _STATUS_PREFIX: dict[str, str] = {
 def get_history(
     domain: str | None = None,
     status: str | None = None,
+    search: str | None = None,
+    sort: str = "newest",
     limit: int = 50,
     offset: int = 0,
 ) -> dict[str, Any]:
@@ -29,10 +31,14 @@ def get_history(
     if status:
         filters.append("status = ?")
         params.append(status)
+    if search:
+        filters.append("LOWER(item_name) LIKE LOWER(?)")
+        params.append(f"%{search}%")
     where = (" WHERE " + " AND ".join(filters)) if filters else ""
+    order = "ASC" if sort == "oldest" else "DESC"
     total: int = conn.execute(f"SELECT COUNT(*) {base}{where}", params).fetchone()[0]
     rows = conn.execute(
-        f"SELECT * {base}{where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        f"SELECT * {base}{where} ORDER BY created_at {order} LIMIT ? OFFSET ?",
         params + [limit, offset],
     ).fetchall()
     return {
