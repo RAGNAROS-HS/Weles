@@ -12,6 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### Fixed
 - `DELETE /data` Alembic calls now run in a thread pool via `asyncio.to_thread()`; previously they blocked the event loop during the full migration (#116)
 - SSE stream handler now guards against empty history list and yields an `error` event instead of raising `IndexError` (#117)
+- Background compression task now catches and logs all exceptions via `logging.error(exc_info=True)` instead of silently swallowing them (#118)
 - `POST /sessions/{id}/messages` now rejects payloads with `content` exceeding 32,000 chars with HTTP 422 (#78)
 - Tool string inputs (item_name, category, notes, value, reason, query) are bounded by `maxLength` in JSON Schema and silently truncated in `dispatch.py` as a safety net (#78)
 - History and preference context blocks are wrapped in `<untrusted_data>` tags; system prompt instructs Claude to treat them as data, never as instructions (#79)

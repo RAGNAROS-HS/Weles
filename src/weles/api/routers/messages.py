@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import uuid
 from collections import OrderedDict
@@ -48,6 +49,8 @@ from weles.tools.profile_tools import (
 from weles.tools.reddit import SEARCH_REDDIT_SCHEMA, search_reddit_handler
 from weles.tools.web import SEARCH_WEB_SCHEMA, search_web_handler
 from weles.utils.errors import ConfigurationError
+
+_log = logging.getLogger(__name__)
 
 
 def make_search_reddit_handler(
@@ -289,7 +292,13 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
             _save_message(session_id, "assistant", "".join(reply_parts))
 
         # Fire-and-forget: compress context if approaching token limit
-        asyncio.create_task(maybe_compress_context(session_id, client, mem_session))
+        async def _compress() -> None:
+            try:
+                await maybe_compress_context(session_id, client, mem_session)
+            except Exception:
+                _log.error("Context compression failed for session %s", session_id, exc_info=True)
+
+        asyncio.create_task(_compress())
 
     return EventSourceResponse(event_stream())
 
