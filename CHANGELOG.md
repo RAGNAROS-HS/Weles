@@ -23,6 +23,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- `GET /export` endpoint: JSON export (default) or ZIP of three CSVs (`format=csv`); both served as browser downloads (#86)
+- Settings page: "Export data" section with "Export as JSON" and "Export as CSV" buttons (#86)
 - `GET /sessions` accepts `search` param; filters by case-insensitive title substring; sessions with `null` title excluded (#85)
 - Sidebar: session search input with 300ms debounce; shows "No sessions match" when search returns empty (#85)
 - `GET /history` accepts `search` (case-insensitive substring on `item_name`) and `sort` (`newest`|`oldest`) query params (#84)
