@@ -15,6 +15,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - History and preference context blocks are wrapped in `<untrusted_data>` tags; system prompt instructs Claude to treat them as data, never as instructions (#79)
 - Newlines stripped from `item_name`, `category`, and `notes` at write time in `add_to_history_handler` (#79)
 - `update_profile()` no longer uses an f-string SQL interpolation; column names now resolved via `_PROFILE_COLUMN_MAP` and pre-built `_UPDATE_SQLS` dict (#80)
+- Compression API call now has a 30 s timeout; `APITimeoutError` is caught separately from generic exceptions; both log at ERROR with traceback (#81)
+- QC search failures in `session_start.py` now log at ERROR instead of WARNING (#81)
+- `_get_user_country()` in `web.py` now logs a WARNING when profile fetch fails (#81)
 
 ### v0.1 — Skeleton
 
