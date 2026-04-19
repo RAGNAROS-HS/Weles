@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { clearData, createSession, deleteHistoryItem, deletePreference, deleteSession, getProfile, getSessionMessages, getSettings, listHistory, listPreferences, listSessions, patchProfile, patchSession, patchSettings } from './api'
@@ -529,7 +529,7 @@ export default function App() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function newChat(): Promise<string> {
+  const newChat = useCallback(async (): Promise<string> => {
     const session = await createSession()
     setSessions(prev => [session, ...prev])
     setActiveId(session.id)
@@ -545,7 +545,18 @@ export default function App() {
     }
     setPage('chat')
     return session.id
-  }
+  }, [mode])
+
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n' && document.activeElement !== inputRef.current) {
+        e.preventDefault()
+        newChat()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [newChat])
 
   async function selectSession(id: string) {
     setActiveId(id)
@@ -709,7 +720,7 @@ export default function App() {
     <div className="layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        <button className="new-chat-btn" aria-label="New chat" onClick={newChat}>+ New chat</button>
+        <button className="new-chat-btn" aria-label="New chat" title="New chat (Ctrl+N)" onClick={newChat}>+ New chat</button>
         <input
           type="search"
           className="session-search"
