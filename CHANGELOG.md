@@ -16,6 +16,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `text_delta` SSE handler now null-coalesces `payload.delta` to `''` preventing literal "undefined" from being appended to message content (#119)
 - SSE read loop now catches all parse errors (not just `SyntaxError`) and wraps the loop in `try/finally` to guarantee `setStreaming(false)` on any exit path (#120)
 - Rapid mode-switching now replaces stale mode_switch UI notices instead of accumulating them; last switch wins and the UI stays consistent (#122)
+- Context compression now writes and commits to DB before updating in-memory session state, eliminating a race condition where a concurrent request could see inconsistent state (#121)
 - `POST /sessions/{id}/messages` now rejects payloads with `content` exceeding 32,000 chars with HTTP 422 (#78)
 - Tool string inputs (item_name, category, notes, value, reason, query) are bounded by `maxLength` in JSON Schema and silently truncated in `dispatch.py` as a safety net (#78)
 - History and preference context blocks are wrapped in `<untrusted_data>` tags; system prompt instructs Claude to treat them as data, never as instructions (#79)
