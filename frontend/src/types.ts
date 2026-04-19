@@ -30,6 +30,8 @@ export interface ToolProgress {
   description?: string
   summary?: string
   error?: string
+  field?: string
+  value?: string
 }
 
 export interface ChatMessage {

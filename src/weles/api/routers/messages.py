@@ -297,10 +297,12 @@ def _agent_event_to_sse(event: AgentEvent, title: str, session_id: str) -> dict[
             "data": json.dumps({"tool": event.tool, "description": event.description}),
         }
     if isinstance(event, ToolEndEvent):
-        return {
-            "event": "tool_end",
-            "data": json.dumps({"tool": event.tool, "result_summary": event.result_summary}),
-        }
+        payload: dict[str, Any] = {"tool": event.tool, "result_summary": event.result_summary}
+        if event.field is not None:
+            payload["field"] = event.field
+        if event.value is not None:
+            payload["value"] = event.value
+        return {"event": "tool_end", "data": json.dumps(payload)}
     if isinstance(event, ToolErrorEvent):
         return {
             "event": "tool_error",
