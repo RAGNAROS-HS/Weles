@@ -11,25 +11,32 @@ from weles.profile.models import Preference, UserProfile
 
 logger = logging.getLogger(__name__)
 
-_PROFILE_FIELDS = {
-    "height_cm",
-    "weight_kg",
-    "build",
-    "fitness_level",
-    "injury_history",
-    "dietary_restrictions",
-    "dietary_preferences",
-    "dietary_approach",
-    "aesthetic_style",
-    "brand_rejections",
-    "climate",
-    "activity_level",
-    "living_situation",
-    "country",
-    "budget_psychology",
-    "fitness_goal",
-    "dietary_goal",
-    "lifestyle_focus",
+_PROFILE_COLUMN_MAP: dict[str, str] = {
+    "height_cm": "height_cm",
+    "weight_kg": "weight_kg",
+    "build": "build",
+    "fitness_level": "fitness_level",
+    "injury_history": "injury_history",
+    "dietary_restrictions": "dietary_restrictions",
+    "dietary_preferences": "dietary_preferences",
+    "dietary_approach": "dietary_approach",
+    "aesthetic_style": "aesthetic_style",
+    "brand_rejections": "brand_rejections",
+    "climate": "climate",
+    "activity_level": "activity_level",
+    "living_situation": "living_situation",
+    "country": "country",
+    "budget_psychology": "budget_psychology",
+    "fitness_goal": "fitness_goal",
+    "dietary_goal": "dietary_goal",
+    "lifestyle_focus": "lifestyle_focus",
+}
+
+_PROFILE_FIELDS = set(_PROFILE_COLUMN_MAP.keys())
+
+_UPDATE_SQLS: dict[str, str] = {
+    field: f"UPDATE profile SET {col} = ? WHERE id = 1"
+    for field, col in _PROFILE_COLUMN_MAP.items()
 }
 
 
@@ -62,7 +69,7 @@ def update_profile(patch: dict[str, Any]) -> UserProfile:
     now_iso = datetime.utcnow().isoformat()
 
     for field, value in patch.items():
-        conn.execute(f"UPDATE profile SET {field} = ? WHERE id = 1", (value,))  # noqa: S608
+        conn.execute(_UPDATE_SQLS[field], (value,))
         timestamps[field] = now_iso
 
     conn.execute(
