@@ -1,4 +1,5 @@
 """Integration tests: GET /sessions/{id}/messages pagination."""
+
 import uuid
 from datetime import datetime, timedelta
 

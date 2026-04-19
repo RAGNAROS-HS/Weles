@@ -1,4 +1,5 @@
 """Integration test: all expected indices exist after alembic upgrade head."""
+
 from weles.db.connection import get_db
 
 EXPECTED_INDICES = {

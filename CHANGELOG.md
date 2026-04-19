@@ -22,6 +22,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### v1.2 — UX
 
+#### Added
+- `aria-label` on all icon buttons: delete session, remove preference, delete history item, back to chat, new chat (#83)
+- Visually-hidden `<label>` for chat textarea; `id="chat-input"` added for programmatic association (#83)
+- Session list items converted to `role="button"` divs with `tabIndex={0}` and `onKeyDown` for Enter/Space; keyboard users can now navigate and select sessions (#83)
+- Confirm-clear modal now has `role="alertdialog" aria-modal="true"`; focus moves to Confirm button when modal opens (#83)
+- Global `:focus-visible` outline (`2px solid #7a7aff`) in `App.css`; `.sr-only` utility class added (#83)
+- Settings, Information, and History pages focus their `<h1>` on mount for screen reader page-transition announcements (#83)
+
 #### Changed
 - Defined `Settings` interface in `types.ts`; `getSettings()` and `patchSettings()` are now fully typed; settings state in `SettingsPage` uses `Settings` instead of `Record<string, unknown>` (#82)
 - Added `[key: string]: unknown` index signature to `UserProfile`; removed double `as unknown as Record<string, string | null>` cast in `InformationPage` (#82)
