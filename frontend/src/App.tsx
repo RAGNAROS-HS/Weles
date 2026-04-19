@@ -548,7 +548,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('general')
   const [sessionSearchInput, setSessionSearchInput] = useState('')
   const [sessionSearch, setSessionSearch] = useState('')
-  const [pendingModeSwitch, setPendingModeSwitch] = useState<Mode | null>(null)
+  const [pendingModeSwitch, setPendingModeSwitch] = useState<Mode | null>(null)  // last pending switch wins
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -646,7 +646,11 @@ export default function App() {
       await patchSession(activeId, { mode: newMode })
       setSessions(prev => prev.map(s => s.id === activeId ? { ...s, mode: newMode } : s))
       if (messages.length > 0) {
-        setMessages(prev => [...prev, { id: `ms-${Date.now()}`, role: 'assistant', content: newMode, type: 'mode_switch' }])
+        // Replace any existing stale mode_switch notice so UI matches the single pending switch
+        setMessages(prev => [
+          ...prev.filter(m => m.type !== 'mode_switch'),
+          { id: `ms-${Date.now()}`, role: 'assistant', content: newMode, type: 'mode_switch' },
+        ])
         setPendingModeSwitch(newMode)
       }
     }
@@ -688,63 +692,65 @@ export default function App() {
     let buffer = ''
     let currentEvent = ''
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
 
-      for (const line of lines) {
-        if (line.startsWith('event:')) {
-          currentEvent = line.slice(6).trim()
-        } else if (line.startsWith('data:')) {
-          let payload: Record<string, unknown>
-          try {
-            payload = JSON.parse(line.slice(5).trim()) as Record<string, unknown>
-          } catch (e) {
-            if (e instanceof SyntaxError) { console.warn('SSE parse error', line); continue }
-            throw e
-          }
-          if (currentEvent === 'text_delta') {
-            setMessages(prev =>
-              prev.map(m =>
-                m.id === assistantId ? { ...m, content: m.content + payload.delta } : m
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            currentEvent = line.slice(6).trim()
+          } else if (line.startsWith('data:')) {
+            let payload: Record<string, unknown>
+            try {
+              payload = JSON.parse(line.slice(5).trim()) as Record<string, unknown>
+            } catch (e) {
+              console.warn('SSE parse error', line, e)
+              continue
+            }
+            if (currentEvent === 'text_delta') {
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantId ? { ...m, content: m.content + ((payload.delta as string) ?? '') } : m
+                )
               )
-            )
-          } else if (currentEvent === 'tool_start') {
-            setToolProgress(prev => [...prev, { tool: payload.tool, status: 'running', description: payload.description }])
-          } else if (currentEvent === 'tool_end') {
-            setToolProgress(prev =>
-              prev.map(t => t.tool === payload.tool ? {
-                ...t,
-                status: 'done',
-                summary: payload.result_summary,
-                ...(payload.field != null ? { field: payload.field as string } : {}),
-                ...(payload.value != null ? { value: payload.value as string } : {}),
-              } : t)
-            )
-          } else if (currentEvent === 'tool_error') {
-            setToolProgress(prev =>
-              prev.map(t => t.tool === payload.tool ? { ...t, status: 'error', error: payload.error } : t)
-            )
-          } else if (currentEvent === 'done') {
-            setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, streaming: false } : m))
-            setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title: payload.title } : s))
-          } else if (currentEvent === 'error') {
-            setMessages(prev =>
-              prev.map(m =>
-                m.id === assistantId
-                  ? { ...m, content: 'Could not reach Claude. Check your API key.', streaming: false }
-                  : m
+            } else if (currentEvent === 'tool_start') {
+              setToolProgress(prev => [...prev, { tool: payload.tool, status: 'running', description: payload.description }])
+            } else if (currentEvent === 'tool_end') {
+              setToolProgress(prev =>
+                prev.map(t => t.tool === payload.tool ? {
+                  ...t,
+                  status: 'done',
+                  summary: payload.result_summary,
+                  ...(payload.field != null ? { field: payload.field as string } : {}),
+                  ...(payload.value != null ? { value: payload.value as string } : {}),
+                } : t)
               )
-            )
+            } else if (currentEvent === 'tool_error') {
+              setToolProgress(prev =>
+                prev.map(t => t.tool === payload.tool ? { ...t, status: 'error', error: payload.error } : t)
+              )
+            } else if (currentEvent === 'done') {
+              setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, streaming: false } : m))
+              setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title: payload.title } : s))
+            } else if (currentEvent === 'error') {
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantId
+                    ? { ...m, content: 'Could not reach Claude. Check your API key.', streaming: false }
+                    : m
+                )
+              )
+            }
           }
         }
       }
+    } finally {
+      setStreaming(false)
     }
-
-    setStreaming(false)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
