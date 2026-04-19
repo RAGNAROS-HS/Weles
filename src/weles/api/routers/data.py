@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import io
 import json
@@ -19,8 +20,8 @@ async def clear_data() -> Response:
     from weles.utils.paths import resource_path
 
     cfg = Config(str(resource_path("alembic.ini")))
-    command.downgrade(cfg, "base")
-    command.upgrade(cfg, "head")
+    await asyncio.to_thread(command.downgrade, cfg, "base")
+    await asyncio.to_thread(command.upgrade, cfg, "head")
     return Response(status_code=204)
 
 
