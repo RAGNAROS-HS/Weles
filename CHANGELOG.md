@@ -23,6 +23,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- Cross-domain product instruction added to `system.md`: agent draws on subreddits from all relevant domains regardless of current mode (#89)
+- `[cross_domain]` section added to `config/subreddits.toml` with r/BuyItForLife, r/Frugal, r/personalfinance (#89)
 - Profile conflict resolution instruction added to `system.md`: agent treats explicit user self-reports as authoritative and immediately calls `save_profile_field` (#88)
 - `Ctrl+N` / `Cmd+N` keyboard shortcut to start a new chat from anywhere in the app (suppressed when focus is in chat textarea) (#87)
 - `GET /export` endpoint: JSON export (default) or ZIP of three CSVs (`format=csv`); both served as browser downloads (#86)
