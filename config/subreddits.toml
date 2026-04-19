@@ -39,3 +39,7 @@ subreddits = ["Coffee", "espresso", "BuyItForLife"]
 
 [lifestyle.home]
 subreddits = ["BuyItForLife", "homeowners", "organization"]
+
+# Cross-domain subreddits — relevant for purchase decisions in any mode
+[cross_domain]
+subreddits = ["BuyItForLife", "Frugal", "personalfinance"]
