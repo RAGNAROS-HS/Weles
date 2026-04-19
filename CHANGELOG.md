@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- `Ctrl+N` / `Cmd+N` keyboard shortcut to start a new chat from anywhere in the app (suppressed when focus is in chat textarea) (#87)
 - `GET /export` endpoint: JSON export (default) or ZIP of three CSVs (`format=csv`); both served as browser downloads (#86)
 - Settings page: "Export data" section with "Export as JSON" and "Export as CSV" buttons (#86)
 - `GET /sessions` accepts `search` param; filters by case-insensitive title substring; sessions with `null` title excluded (#85)
