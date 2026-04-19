@@ -1,4 +1,5 @@
 """Integration tests: GET /history pagination."""
+
 import uuid
 from datetime import datetime
 
