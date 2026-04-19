@@ -200,6 +200,12 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
         history = mem_session.get_messages_for_context()
 
         # Inject missing-field note into the user turn
+        if not history:
+            yield {
+                "event": "error",
+                "data": json.dumps({"message": "No messages found for session"}),
+            }
+            return
         missing = check_missing_fields(mode, profile)
         unasked = [f for f in missing if f not in mem_session.asked_this_session]
         if unasked:
