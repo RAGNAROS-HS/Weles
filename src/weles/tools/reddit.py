@@ -138,6 +138,7 @@ async def search_reddit(
             seen_urls: set[str] = set()
             extended: list[dict[str, Any]] = []
             for sub in subreddits:
+                sub = sub.removeprefix("r/")
                 url = f"{_BASE}/r/{sub}/search.json"
                 data = await _reddit_get(client, url, {**base_params, "restrict_sr": "true"})
                 for post in _parse_posts(data):
