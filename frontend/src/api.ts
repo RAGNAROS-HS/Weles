@@ -1,4 +1,4 @@
-import type { HistoryItem, Mode, Preference, Session, UserProfile } from './types'
+import type { HistoryItem, Mode, Preference, Session, Settings, UserProfile } from './types'
 
 function checkOk(r: Response): Response {
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -28,12 +28,12 @@ export async function patchSession(id: string, patch: { title?: string; mode?: M
   return checkOk(r).json()
 }
 
-export async function getSettings(): Promise<Record<string, unknown>> {
+export async function getSettings(): Promise<Settings> {
   const r = await fetch('/settings')
   return checkOk(r).json()
 }
 
-export async function patchSettings(patch: Record<string, unknown>): Promise<Record<string, unknown>> {
+export async function patchSettings(patch: Partial<Settings>): Promise<Settings> {
   const r = await fetch('/settings', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -103,4 +103,4 @@ export async function deleteHistoryItem(id: string): Promise<void> {
   await fetch(`/history/${id}`, { method: 'DELETE' })
 }
 
-export type { HistoryItem, Preference, UserProfile } from './types'
+export type { HistoryItem, Preference, Settings, UserProfile } from './types'
