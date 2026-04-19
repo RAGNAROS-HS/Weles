@@ -23,6 +23,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- Inline profile edit chips appear after `save_profile_field` or `update_preference` tool calls; clicking [Edit] lets users correct the saved value in-place (#91)
+- `tool_end` SSE payload now includes `field` and `value` keys for `save_profile_field` and `update_preference` (additive, non-breaking) (#91)
 - Mode-switch notice injected into the conversation when mode changes mid-session; `[System: Mode changed to {mode}]` prepended to the next user message so Claude reframes context (#90)
 - Cross-domain product instruction added to `system.md`: agent draws on subreddits from all relevant domains regardless of current mode (#89)
 - `[cross_domain]` section added to `config/subreddits.toml` with r/BuyItForLife, r/Frugal, r/personalfinance (#89)
