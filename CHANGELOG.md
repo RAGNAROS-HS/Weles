@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### v2.0 — Features
 
 #### Added
+- Mode-switch notice injected into the conversation when mode changes mid-session; `[System: Mode changed to {mode}]` prepended to the next user message so Claude reframes context (#90)
 - Cross-domain product instruction added to `system.md`: agent draws on subreddits from all relevant domains regardless of current mode (#89)
 - `[cross_domain]` section added to `config/subreddits.toml` with r/BuyItForLife, r/Frugal, r/personalfinance (#89)
 - Profile conflict resolution instruction added to `system.md`: agent treats explicit user self-reports as authoritative and immediately calls `save_profile_field` (#88)

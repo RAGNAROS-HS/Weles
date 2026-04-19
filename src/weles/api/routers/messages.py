@@ -97,6 +97,7 @@ def evict_session(session_id: str) -> None:
 
 class MessageBody(BaseModel):
     content: str = Field(..., max_length=32_000)
+    mode_changed_to: str | None = None
 
 
 def _get_session(session_id: str) -> dict[str, Any]:
@@ -160,7 +161,10 @@ async def post_message(session_id: str, body: MessageBody, request: Request) -> 
     async def event_stream() -> AsyncIterator[dict[str, Any]]:
         is_first = _is_first_message(session_id)
 
-        _save_message(session_id, "user", body.content)
+        user_content = body.content
+        if body.mode_changed_to:
+            user_content = f"[System: Mode changed to {body.mode_changed_to}]\n{body.content}"
+        _save_message(session_id, "user", user_content)
         _set_session_title(session_id, body.content)
 
         if is_first:

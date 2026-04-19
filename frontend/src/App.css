@@ -168,6 +168,17 @@ body {
 .message.user { justify-content: flex-end; }
 .message.assistant { justify-content: flex-start; }
 
+.mode-switch-notice {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  padding: 4px 12px;
+  border-top: 1px solid #2e2e2e;
+  border-bottom: 1px solid #2e2e2e;
+  background: #141414;
+  font-style: italic;
+}
+
 .bubble {
   max-width: 70%;
   padding: 10px 14px;
