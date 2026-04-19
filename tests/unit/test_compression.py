@@ -3,7 +3,7 @@
 import contextlib
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import anthropic
 import pytest
@@ -99,7 +99,7 @@ async def test_compression_uses_id_not_content(tmp_db: object) -> None:
     mock_response = MagicMock()
     mock_response.content = [MagicMock(text="Summary of the exchange.")]
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_response
+    mock_client.messages.create = AsyncMock(return_value=mock_response)
 
     # Force compression to fire regardless of token count
     from unittest.mock import patch
@@ -143,7 +143,7 @@ async def test_compression_continues_on_api_timeout(tmp_db: object) -> None:
     session = _make_session_from_db(session_id)
 
     mock_client = MagicMock()
-    mock_client.messages.create.side_effect = anthropic.APITimeoutError(request=MagicMock())
+    mock_client.messages.create = AsyncMock(side_effect=anthropic.APITimeoutError(request=MagicMock()))
 
     with (
         patch("weles.agent.compression.needs_compression", return_value=True),
@@ -185,7 +185,7 @@ async def test_db_failure_leaves_in_memory_state_unchanged(tmp_db: object) -> No
     mock_response = MagicMock()
     mock_response.content = [MagicMock(text="Summary.")]
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_response
+    mock_client.messages.create = AsyncMock(return_value=mock_response)
 
     call_count = 0
 

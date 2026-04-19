@@ -21,11 +21,17 @@ def test_evict_session_noop_for_unknown_id() -> None:
 
 def test_evict_session_called_on_delete(tmp_db: object) -> None:
     """delete_session endpoint calls evict_session after DB delete."""
+    from unittest.mock import patch
+
     from fastapi.testclient import TestClient
 
     from weles.api.main import app
 
-    with TestClient(app) as client:
+    async def _fake_startup(state: object) -> None:
+        state.web_search_available = False  # type: ignore[attr-defined]
+        state.is_first_run = True  # type: ignore[attr-defined]
+
+    with patch("weles.api.startup.startup", new=_fake_startup), TestClient(app) as client:
         r = client.post("/sessions")
         session_id = r.json()["id"]
 
