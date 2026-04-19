@@ -155,4 +155,7 @@ def get_history_context(domain: str) -> str | None:
         lines.append(f"{prefix}: {r['item_name']} ({', '.join(parts)}).")
 
     domain_label = domain.capitalize()
-    return f"[History — {domain_label}]\n" + "\n".join(lines)
+    return (
+        f"[History — {domain_label}]\n"
+        '<untrusted_data source="user_history">\n' + "\n".join(lines) + "\n</untrusted_data>"
+    )

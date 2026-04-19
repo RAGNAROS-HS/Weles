@@ -102,8 +102,10 @@ def build_profile_block(profile: UserProfile, preferences: list[Preference]) -> 
     # Learned preferences
     if preferences:
         lines.append("Learned preferences:")
+        lines.append('<untrusted_data source="user_preferences">')
         for pref in preferences:
             lines.append(f"- {pref.value}")
+        lines.append("</untrusted_data>")
 
     block = "\n".join(lines)
 

@@ -46,13 +46,14 @@ ADD_TO_HISTORY_SCHEMA: dict[str, Any] = {
 
 
 def add_to_history_handler(tool_input: dict[str, Any]) -> ToolResult:
+    notes_raw = tool_input.get("notes")
     item = _add_to_history(
-        item_name=tool_input["item_name"],
-        category=tool_input["category"],
+        item_name=tool_input["item_name"].replace("\n", " ").replace("\r", " "),
+        category=tool_input["category"].replace("\n", " ").replace("\r", " "),
         domain=tool_input["domain"],
         status=tool_input["status"],
         rating=tool_input.get("rating"),
-        notes=tool_input.get("notes"),
+        notes=notes_raw.replace("\n", " ").replace("\r", " ") if notes_raw else None,
     )
     return ToolResult(summary=f"Saved {item['item_name']} to history.", data=item)
 
