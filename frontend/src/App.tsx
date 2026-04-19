@@ -509,6 +509,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('general')
   const [sessionSearchInput, setSessionSearchInput] = useState('')
   const [sessionSearch, setSessionSearch] = useState('')
+  const [pendingModeSwitch, setPendingModeSwitch] = useState<Mode | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -605,6 +606,10 @@ export default function App() {
     if (activeId) {
       await patchSession(activeId, { mode: newMode })
       setSessions(prev => prev.map(s => s.id === activeId ? { ...s, mode: newMode } : s))
+      if (messages.length > 0) {
+        setMessages(prev => [...prev, { id: `ms-${Date.now()}`, role: 'assistant', content: newMode, type: 'mode_switch' }])
+        setPendingModeSwitch(newMode)
+      }
     }
   }
 
@@ -621,10 +626,12 @@ export default function App() {
     const assistantId = `a-${Date.now()}`
     setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '', streaming: true }])
 
+    const modeSwitch = pendingModeSwitch
+    setPendingModeSwitch(null)
     const resp = await fetch(`/sessions/${sessionId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: userMsg.content }),
+      body: JSON.stringify({ content: userMsg.content, mode_changed_to: modeSwitch }),
     })
 
     if (!resp.body) {
@@ -776,15 +783,24 @@ export default function App() {
               Load older messages
             </button>
           )}
-          {messages.map(msg => (
-            <div key={msg.id} className={`message ${msg.role}`}>
-              <div className="bubble">
-                {msg.role === 'assistant'
-                  ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || (msg.streaming ? '…' : '')}</ReactMarkdown>
-                  : msg.content}
+          {messages.map(msg => {
+            if (msg.type === 'mode_switch') {
+              return (
+                <div key={msg.id} className="mode-switch-notice">
+                  Mode switched to {MODE_LABELS[msg.content as Mode] ?? msg.content}. Prior context from this session is still available.
+                </div>
+              )
+            }
+            return (
+              <div key={msg.id} className={`message ${msg.role}`}>
+                <div className="bubble">
+                  {msg.role === 'assistant'
+                    ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || (msg.streaming ? '…' : '')}</ReactMarkdown>
+                    : msg.content}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           <div ref={bottomRef} />
         </div>
 

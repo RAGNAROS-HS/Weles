@@ -37,6 +37,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   streaming?: boolean
+  type?: 'mode_switch'
 }
 
 export interface UserProfile {
