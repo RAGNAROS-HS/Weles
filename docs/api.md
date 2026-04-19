@@ -47,6 +47,9 @@ Create a new chat session. Runs session-start checks.
 ### `GET /sessions`
 List all sessions, most recent first.
 
+**Query params** (optional):
+- `search`: substring match on `title` (case-insensitive); sessions with `null` title are excluded from search results
+
 **Response `200`** — array of:
 ```json
 {

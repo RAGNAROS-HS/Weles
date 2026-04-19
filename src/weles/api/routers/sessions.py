@@ -58,14 +58,20 @@ async def create_session() -> dict[str, Any]:
 
 
 @router.get("")
-async def list_sessions() -> list[dict[str, Any]]:
+async def list_sessions(search: str | None = None) -> list[dict[str, Any]]:
     conn = get_db()
-    rows = conn.execute("SELECT * FROM sessions ORDER BY created_at DESC").fetchall()
+    if search:
+        rows = conn.execute(
+            "SELECT * FROM sessions WHERE title IS NOT NULL AND LOWER(title) LIKE LOWER(?)"
+            " ORDER BY created_at DESC",
+            (f"%{search}%",),
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT * FROM sessions ORDER BY created_at DESC").fetchall()
     result = []
     for row in rows:
         d = dict(row)
         d["preview"] = _session_preview(d["id"])
-        d["created_at"] = d["created_at"]
         result.append(d)
     return result
 
