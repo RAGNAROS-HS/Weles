@@ -242,3 +242,22 @@ Wipe all user data. Runs `alembic downgrade base` then `alembic upgrade head`.
 **Response `204`**
 
 Used by the Settings page "Clear all data" button.
+
+
+### `GET /export`
+Export profile, preferences, and history.
+
+**Query params** (optional):
+- `format`: `json` (default) | `csv`
+
+**`format=json`** — `200 application/json`; `Content-Disposition: attachment; filename="weles-export-{date}.json"`
+```json
+{
+  "exported_at": "2026-04-18T12:00:00+00:00",
+  "profile": { ... },
+  "preferences": [ ... ],
+  "history": [ ... ]
+}
+```
+
+**`format=csv`** — `200 application/zip`; `Content-Disposition: attachment; filename="weles-export-{date}.zip"` containing `profile.csv`, `preferences.csv`, `history.csv`

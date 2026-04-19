@@ -127,6 +127,14 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
       </section>
 
       <section>
+        <h2>Export data</h2>
+        <div className="export-row">
+          <button onClick={() => { window.location.href = '/export' }}>Export as JSON</button>
+          <button onClick={() => { window.location.href = '/export?format=csv' }}>Export as CSV</button>
+        </div>
+      </section>
+
+      <section>
         <h2>Data</h2>
         {confirmClear ? (
           <div className="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
