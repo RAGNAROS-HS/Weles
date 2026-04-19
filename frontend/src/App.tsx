@@ -495,6 +495,45 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
   )
 }
 
+// ── Profile edit chip ─────────────────────────────────────────────────────────
+
+function ProfileEditChip({ tool, field, value }: { tool: string; field: string; value: string }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+  const [saved, setSaved] = useState(value)
+
+  async function handleSave() {
+    if (draft.trim() === saved) { setEditing(false); return }
+    await patchProfile({ [field]: draft.trim() || null })
+    setSaved(draft.trim())
+    setEditing(false)
+  }
+
+  const label = tool === 'update_preference' ? `preference: ${field}` : field
+
+  return (
+    <div className="profile-edit-chip">
+      <span className="chip-icon">✎</span>
+      <span className="chip-label">Saved: {label} = {saved}</span>
+      {editing ? (
+        <>
+          <input
+            className="chip-input"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+            autoFocus
+          />
+          <button className="chip-btn" onClick={handleSave}>OK</button>
+          <button className="chip-btn" onClick={() => setEditing(false)}>✕</button>
+        </>
+      ) : (
+        <button className="chip-edit-btn" onClick={() => setEditing(true)}>[Edit]</button>
+      )}
+    </div>
+  )
+}
+
 // ── Chat page ────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -677,7 +716,13 @@ export default function App() {
             setToolProgress(prev => [...prev, { tool: payload.tool, status: 'running', description: payload.description }])
           } else if (currentEvent === 'tool_end') {
             setToolProgress(prev =>
-              prev.map(t => t.tool === payload.tool ? { ...t, status: 'done', summary: payload.result_summary } : t)
+              prev.map(t => t.tool === payload.tool ? {
+                ...t,
+                status: 'done',
+                summary: payload.result_summary,
+                ...(payload.field != null ? { field: payload.field as string } : {}),
+                ...(payload.value != null ? { value: payload.value as string } : {}),
+              } : t)
             )
           } else if (currentEvent === 'tool_error') {
             setToolProgress(prev =>
@@ -821,6 +866,10 @@ export default function App() {
             }
           </div>
         )}
+        {/* Profile edit chips — ephemeral, shown only for the current turn */}
+        {toolProgress.filter(t => t.status === 'done' && t.field && t.value !== undefined && (t.tool === 'save_profile_field' || t.tool === 'update_preference')).map((t, i) => (
+          <ProfileEditChip key={i} tool={t.tool} field={t.field!} value={t.value!} />
+        ))}
 
         {/* Input */}
         <div className="input-bar">

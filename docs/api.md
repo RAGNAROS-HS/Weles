@@ -97,6 +97,8 @@ SSE event types:
 event: text_delta     data: {"delta": "..."}
 event: tool_start     data: {"tool": "search_reddit", "description": "Searching r/BuyItForLife..."}
 event: tool_end       data: {"tool": "search_reddit", "result_summary": "Found 8 posts"}
+                      # for save_profile_field / update_preference, also includes:
+                      # "field": "fitness_level", "value": "intermediate"
 event: tool_error     data: {"tool": "search_reddit", "error": "Request timed out"}
 event: done           data: {"session_id": "uuid", "title": "string"}
 event: error          data: {"message": "Claude API unavailable"}

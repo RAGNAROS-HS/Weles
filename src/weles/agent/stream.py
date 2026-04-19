@@ -34,6 +34,8 @@ class ToolStartEvent:
 class ToolEndEvent:
     tool: str
     result_summary: str
+    field: str | None = None
+    value: str | None = None
 
 
 @dataclass
@@ -136,7 +138,16 @@ async def stream_response(
             yield ToolStartEvent(tool=tool_use.name, description=description)
             try:
                 result = await registry.adispatch(tool_use.name, tool_use.input)
-                yield ToolEndEvent(tool=tool_use.name, result_summary=result.summary)
+                end_event = ToolEndEvent(tool=tool_use.name, result_summary=result.summary)
+                if tool_use.name == "save_profile_field":
+                    f = tool_use.input.get("field")
+                    end_event.field = str(f) if f is not None else None
+                    end_event.value = str(tool_use.input.get("value", ""))
+                elif tool_use.name == "update_preference":
+                    d = tool_use.input.get("dimension")
+                    end_event.field = str(d) if d is not None else None
+                    end_event.value = str(tool_use.input.get("value", ""))
+                yield end_event
                 result_content = str(result.data)
             except MaxToolCallsError:
                 yield ToolErrorEvent(tool="max_tool_calls", error="Research limit reached")
