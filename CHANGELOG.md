@@ -20,6 +20,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `_get_user_country()` in `web.py` now logs a WARNING when profile fetch fails (#81)
 - Prompt and config files (`system.md`, mode prompts, `research.md`, `programs.toml`) are now cached at module load; `build_system_prompt()` and `stream_response()` make zero blocking file reads per request (#92)
 
+### v2.0 — Features
+
+#### Added
+- `GET /history` accepts `search` (case-insensitive substring on `item_name`) and `sort` (`newest`|`oldest`) query params (#84)
+- History page: search-by-name input (300ms debounce) and sort dropdown; composes with existing domain/status filters (#84)
+
 ### v1.2 — UX
 
 #### Added

@@ -159,6 +159,8 @@ List history items, most recent first, with pagination.
 **Query params** (all optional):
 - `domain`: `shopping|diet|fitness|lifestyle`
 - `status`: `recommended|bought|tried|rated|skipped`
+- `search`: substring match on `item_name` (case-insensitive)
+- `sort`: `newest` (default) | `oldest` — controls `created_at` sort order
 - `limit`: items per page (default `50`)
 - `offset`: number of items to skip (default `0`)
 

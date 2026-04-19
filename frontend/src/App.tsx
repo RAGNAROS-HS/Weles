@@ -375,6 +375,9 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
   const [offset, setOffset] = useState(0)
   const [domain, setDomain] = useState('')
   const [status, setStatus] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
   const [error, setError] = useState<string | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const LIMIT = 50
@@ -382,17 +385,22 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
   useEffect(() => { headingRef.current?.focus() }, [])
 
   useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300)
+    return () => clearTimeout(t)
+  }, [searchInput])
+
+  useEffect(() => {
     setItems([])
     setOffset(0)
     setTotal(0)
-    listHistory(domain || undefined, status || undefined, LIMIT, 0)
+    listHistory(domain || undefined, status || undefined, LIMIT, 0, search || undefined, sort)
       .then(page => { setItems(page.items); setTotal(page.total) })
       .catch(() => setError('Failed to load — try refreshing'))
-  }, [domain, status])
+  }, [domain, status, search, sort])
 
   async function loadMore() {
     const nextOffset = offset + LIMIT
-    const page = await listHistory(domain || undefined, status || undefined, LIMIT, nextOffset)
+    const page = await listHistory(domain || undefined, status || undefined, LIMIT, nextOffset, search || undefined, sort)
     setItems(prev => [...prev, ...page.items])
     setOffset(nextOffset)
     setTotal(page.total)
@@ -412,6 +420,16 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
       <h1 ref={headingRef} tabIndex={-1}>History</h1>
       <div className="history-filters">
         <label>
+          Search by name
+          <input
+            type="search"
+            className="history-search"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            placeholder="e.g. Sony WH-1000XM5"
+          />
+        </label>
+        <label>
           Domain
           <select value={domain} onChange={e => setDomain(e.target.value)}>
             {DOMAINS.map(d => <option key={d} value={d}>{d || 'All'}</option>)}
@@ -421,6 +439,13 @@ function HistoryPage({ onBack }: { onBack: () => void }) {
           Status
           <select value={status} onChange={e => setStatus(e.target.value)}>
             {STATUSES.map(s => <option key={s} value={s}>{s || 'All'}</option>)}
+          </select>
+        </label>
+        <label>
+          Sort
+          <select value={sort} onChange={e => setSort(e.target.value as 'newest' | 'oldest')}>
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
           </select>
         </label>
       </div>

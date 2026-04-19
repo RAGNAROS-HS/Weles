@@ -82,10 +82,14 @@ export async function listHistory(
   status?: string,
   limit = 50,
   offset = 0,
+  search?: string,
+  sort: 'newest' | 'oldest' = 'newest',
 ): Promise<HistoryPage> {
   const params = new URLSearchParams()
   if (domain) params.set('domain', domain)
   if (status) params.set('status', status)
+  if (search) params.set('search', search)
+  params.set('sort', sort)
   params.set('limit', String(limit))
   params.set('offset', String(offset))
   const r = await fetch(`/history?${params.toString()}`)

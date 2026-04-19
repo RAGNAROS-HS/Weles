@@ -294,7 +294,7 @@ body {
 .history-page h1 { margin-bottom: 24px; }
 .history-filters { display: flex; gap: 16px; margin-bottom: 20px; }
 .history-filters label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.history-filters select {
+.history-filters select, .history-search {
   background: #1e1e1e;
   border: 1px solid #333;
   color: #e8e8e8;
@@ -302,6 +302,7 @@ body {
   padding: 4px 8px;
   font-size: 13px;
 }
+.history-search { min-width: 180px; }
 .history-empty { color: #666; font-size: 14px; }
 .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .history-table th {
