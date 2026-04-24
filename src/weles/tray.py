@@ -25,6 +25,7 @@ import uvicorn
 from dotenv import load_dotenv, set_key
 from PIL import Image
 
+from weles.api.main import app
 from weles.utils.paths import resource_path
 
 _WELES_DIR = Path.home() / ".weles"
@@ -115,10 +116,11 @@ def main() -> None:
 
     if not port_conflict:
         config = uvicorn.Config(
-            "weles.api.main:app",
+            app,
             host="127.0.0.1",
             port=port,
             log_level="info",
+            log_config=None,
         )
         server = uvicorn.Server(config)
         server_thread = threading.Thread(
@@ -138,10 +140,11 @@ def main() -> None:
                 server_thread.join(timeout=5)
         new_port = _get_port()
         new_config = uvicorn.Config(
-            "weles.api.main:app",
+            app,
             host="127.0.0.1",
             port=new_port,
             log_level="info",
+            log_config=None,
         )
         server = uvicorn.Server(new_config)
         server_thread = threading.Thread(target=server.run, daemon=True)

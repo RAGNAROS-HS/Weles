@@ -1,13 +1,13 @@
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from weles.api.routers import data, history, messages, preferences, profile, sessions, settings
+from weles.utils.paths import resource_path
 
 
 @asynccontextmanager
@@ -48,6 +48,6 @@ async def health() -> dict[str, object]:
 
 
 # Serve built frontend in production
-_dist = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+_dist = resource_path("frontend/dist")
 if _dist.exists():
     app.mount("/", StaticFiles(directory=str(_dist), html=True), name="static")
